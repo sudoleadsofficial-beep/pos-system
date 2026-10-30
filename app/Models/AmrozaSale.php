@@ -20,6 +20,7 @@ class AmrozaSale extends Model
         'rate',
         'bardana',
         'gross_amount',
+        'payment_type',
         'consignment_id',
         'year',
         'created_by',
@@ -40,6 +41,9 @@ class AmrozaSale extends Model
         parent::boot();
 
         static::saving(function ($sale) {
+            if (empty($sale->payment_type)) {
+                $sale->payment_type = ($sale->merchant && (int)$sale->merchant->code === 1) ? 'naqdi' : 'udhaar';
+            }
             $weight = floatval($sale->weight);
             $nag = intval($sale->nag);
             $rate = floatval($sale->rate);

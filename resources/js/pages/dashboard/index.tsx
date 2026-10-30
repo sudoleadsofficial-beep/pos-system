@@ -4,11 +4,12 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { DashboardStats } from './_components/stats-section';
+import { DashboardCharts } from './_components/charts-section';
 import { JkcBanner } from '@/components/app/jkc-banner';
 
 export default function Dashboard() {
     const { t } = useTranslation();
-    const { stats } = usePage().props as any;
+    const { stats, chartData, topItemsChart, recentSales } = usePage().props as any;
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -20,9 +21,14 @@ export default function Dashboard() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('nav.dashboard')} />
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-5 pb-8">
                 <JkcBanner />
                 <DashboardStats stats={stats} />
+                <DashboardCharts
+                    chartData={chartData}
+                    topItemsChart={topItemsChart}
+                    recentSales={recentSales}
+                />
             </div>
         </AppLayout>
     );

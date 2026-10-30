@@ -171,7 +171,14 @@
     "credit_nag_amount": "ادھاری: نگ {{nag}} | رقم {{amount}}",
     "am_total": "میزان امروزہ",
     "naqdi": "نقدی",
-    "udhaari": "ادھاری"
+    "udhaari": "ادھاری",
+    "guide_payment": "پہلے ادائیگی کی قسم چنیں",
+    "guide_buyer": "پہلے خریدار چنیں",
+    "guide_item": "پہلے مال چنیں",
+    "guide_units": "پہلے نگ لکھیں",
+    "guide_weight": "پہلے وزن لکھیں",
+    "guide_rate": "پہلے ریٹ لکھیں",
+    "guide_add": "پہلے ضروری خانے پورے کریں"
   },
   "naqdi": {
     "title": "نقدی فارم",

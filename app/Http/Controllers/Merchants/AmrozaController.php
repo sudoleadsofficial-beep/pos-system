@@ -33,11 +33,37 @@ class AmrozaController extends Controller
             ->orderBy('code', 'asc')
             ->get();
 
+        // Get top 6 most-sold items for quick-pick buttons, fallback to first 6 items
+        $topItemIds = \App\Models\AmrozaSale::select('item_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total_sales'))
+            ->groupBy('item_id')
+            ->orderByDesc('total_sales')
+            ->limit(6)
+            ->pluck('item_id')
+            ->toArray();
+
+        $topItems = collect();
+        if (!empty($topItemIds)) {
+            $topItems = $items->whereIn('id', $topItemIds)->values();
+        }
+        if ($topItems->count() < 6) {
+            $remaining = $items->whereNotIn('id', $topItems->pluck('id'))->take(6 - $topItems->count());
+            $topItems = $topItems->merge($remaining)->values();
+        }
+
+        // Get recent rates per item for anomaly detection
+        $recentRates = \App\Models\AmrozaSale::select('item_id', 'rate')
+            ->orderBy('id', 'desc')
+            ->get()
+            ->unique('item_id')
+            ->pluck('rate', 'item_id');
+
         return Inertia::render('merchants/amroza/index', [
             'sales' => $sales,
             'summary' => $summary,
             'merchants' => $merchants,
             'items' => $items,
+            'topItems' => $topItems,
+            'recentRates' => $recentRates,
             'filters' => [
                 'date' => $date,
                 'search' => $search,
@@ -55,6 +81,7 @@ class AmrozaController extends Controller
             'weight' => 'nullable|numeric|min:0',
             'rate' => 'required|numeric|min:0',
             'bardana' => 'nullable|numeric|min:0',
+            'payment_type' => 'nullable|in:naqdi,udhaar',
         ]);
 
         $validated['created_by'] = auth()->id();
@@ -74,6 +101,7 @@ class AmrozaController extends Controller
             'weight' => 'nullable|numeric|min:0',
             'rate' => 'required|numeric|min:0',
             'bardana' => 'nullable|numeric|min:0',
+            'payment_type' => 'nullable|in:naqdi,udhaar',
         ]);
 
         $this->amrozaService->updateSale($id, $validated);

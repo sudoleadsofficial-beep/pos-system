@@ -171,7 +171,14 @@
     "credit_nag_amount": "Credit: Nag {{nag}} | Rs. {{amount}}",
     "am_total": "Am Total",
     "naqdi": "Naqdi (Cash)",
-    "udhaari": "Udhaari (Credit)"
+    "udhaari": "Udhaari (Credit)",
+    "guide_payment": "First select the payment type",
+    "guide_buyer": "First select the buyer",
+    "guide_item": "First select an item",
+    "guide_units": "First enter the units (Nag)",
+    "guide_weight": "First enter the weight",
+    "guide_rate": "First enter the rate",
+    "guide_add": "Please fill all required fields"
   },
   "naqdi": {
     "title": "Naqdi Form",

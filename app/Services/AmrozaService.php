@@ -101,7 +101,9 @@ class AmrozaService
             $totalGross += $gross;
             $totalNag += $nag;
 
-            if ($sale->merchant && (int)$sale->merchant->code === 1) {
+            $isNaqdi = $sale->payment_type === 'naqdi' || ($sale->merchant && (int)$sale->merchant->code === 1);
+
+            if ($isNaqdi) {
                 $cashNag += $nag;
                 $cashAmount += $gross;
             } else {
