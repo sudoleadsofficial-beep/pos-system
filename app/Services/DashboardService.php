@@ -15,13 +15,17 @@ class DashboardService
         ];
     }
 
-
     private function getDashboardStat()
     {
         return [
-            'activeCustomers' => Customer::query()
-                ->where('status', 'active')
-                ->count(),
+            'todaysSale' => 0,
+            'cashSale' => 0,
+            'creditSale' => 0,
+            'received' => 0,
+            'merchantsBalance' => 0,
+            'cashInHand' => 0,
+            'farmersBalance' => 0,
+            'activeCustomers' => Customer::query()->where('status', 'active')->count(),
         ];
     }
 }

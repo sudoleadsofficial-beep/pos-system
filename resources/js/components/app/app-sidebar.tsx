@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-
+import { useTranslation } from 'react-i18next';
 import {
     Sidebar,
     SidebarContent,
@@ -11,195 +11,217 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-    useSidebar,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
+    SidebarRail,
 } from '@/components/ui/sidebar';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import AppLogo from '@/components/app/app-logo';
 import Icon from '@/components/ui/icon';
-
-import { navigationItems } from '@/lib/navigation';
-
+import { CaretRightIcon } from '@phosphor-icons/react';
+import { getNavigationItems } from '@/lib/navigation';
 import { NavGroup } from '@/types';
 import { cn } from '@/lib/utils';
 import { NavUser } from '../nav/nav-user';
 
 export function AppSidebar() {
+    const { url, props } = usePage();
+    const { t, i18n } = useTranslation();
+    const isUrdu = i18n.language === 'ur';
 
-    const { url } = usePage();
+    const showLegacyPos = (props as any)?.showLegacyPos ?? false;
+    const { sideNav } = useMemo(() => getNavigationItems(showLegacyPos), [showLegacyPos]);
+    const currentRouteName = (route().current() as string) || '';
 
-    const { sideNav } = navigationItems;
-    const { setOpen } = useSidebar();
+    // Track which groups are expanded
+    const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+        const initial: Record<string, boolean> = {};
+        sideNav.forEach(group => {
+            const hasActiveRoute = group.items.some(item => item.url === url) ||
+                (group.includeRoutes && group.includeRoutes.some(r => currentRouteName.startsWith(r)));
+            // Open active group by default, or merchants group on home
+            initial[group.id] = !!hasActiveRoute || group.id === 'merchants';
+        });
+        return initial;
+    });
 
-    const [activeItem, setActiveItem] = useState<NavGroup>(sideNav[0]);
-    const currentRouteName = route().current() as string;
-
+    // Auto-expand group when route changes
     useEffect(() => {
-        const matchedItem = sideNav.find(item =>
-            item.includeRoutes.includes(currentRouteName.split('.')[0])
-        ) ?? sideNav[0];
+        sideNav.forEach(group => {
+            const hasActiveRoute = group.items.some(item => item.url === url) ||
+                (group.includeRoutes && group.includeRoutes.some(r => currentRouteName.startsWith(r)));
+            if (hasActiveRoute) {
+                setOpenGroups(prev => ({ ...prev, [group.id]: true }));
+            }
+        });
+    }, [url, currentRouteName, sideNav]);
 
-        setActiveItem(matchedItem);
-    }, [currentRouteName, sideNav]);
+    const toggleGroup = (groupId: string) => {
+        setOpenGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+    };
 
     return (
-        <Sidebar
-            collapsible="icon"
-            variant="sidebar"
-            className="overflow-hidden *:data-[sidebar=sidebar]:flex-row"
-        >
-            <Sidebar
-                collapsible="none"
-                className="w-[calc(var(--sidebar-width-icon))]! border-r"
-            >
-                <SidebarHeader>
-                    <SidebarMenu className="px-0 flex items-center justify-center">
-                        <SidebarMenuItem>
-                            <SidebarMenuButton
-                                size="lg"
-                                asChild
-                            >
-                                <Link href="/dashboard" prefetch>
-                                    <AppLogo />
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
-                </SidebarHeader>
+        <Sidebar collapsible="icon" variant="sidebar" className="border-e shadow-xs">
+            {/* Sidebar Branding Header */}
+            <SidebarHeader className="border-b px-3 py-2.5">
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton size="lg" asChild className="hover:bg-transparent px-1">
+                            <Link href="/dashboard" prefetch>
+                                <AppLogo />
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarHeader>
 
-                <SidebarContent>
-                    <SidebarGroup>
-                        <SidebarGroupContent className="px-1.5 md:px-0">
-                            <SidebarMenu className='px-1'>
-                                {sideNav.map((menuItem, index) => {
-                                    const isActive = activeItem.title === menuItem.title;
+            {/* Navigation Content (Single unified sidebar) */}
+            <SidebarContent className="px-2 py-3 overflow-y-auto">
+                <SidebarGroup className="p-0">
+                    <SidebarGroupContent>
+                        <SidebarMenu className="gap-1">
+                            {sideNav.map((group: NavGroup) => {
+                                const hasMultiple = group.items && group.items.length > 1;
+                                const groupHasActiveItem = group.items.some(item => item.url === url);
+
+                                // Single item group (e.g. Dashboard, Cash Book, Reports)
+                                if (!hasMultiple && group.items && group.items.length === 1) {
+                                    const singleItem = group.items[0];
+                                    const isActive = url === singleItem.url;
+                                    const label = t(singleItem.title || group.title);
+
                                     return (
-                                        <SidebarMenuItem key={index}>
+                                        <SidebarMenuItem key={group.id}>
                                             <SidebarMenuButton
-                                                className={cn(
-                                                    "flex items-center justify-center rounded-md py-[18px] mb-2 cursor-pointer",
-                                                    isActive && "bg-white border"
-                                                )}
+                                                asChild
                                                 isActive={isActive}
-                                                tooltip={{
-                                                    children: menuItem.title,
-                                                    hidden: false,
-                                                }}
-                                                onClick={() => {
-                                                    setActiveItem(menuItem)
-                                                    setOpen(true)
-                                                }}
+                                                tooltip={label}
+                                                className={cn(
+                                                    "transition-colors rounded-lg font-medium h-9 px-2.5",
+                                                    isActive
+                                                        ? "bg-green-700 text-white font-semibold shadow-xs hover:bg-green-800 hover:text-white"
+                                                        : "text-sidebar-foreground hover:bg-green-50 hover:text-green-900"
+                                                )}
                                             >
-                                                <Icon
-                                                    name={menuItem.icon}
-                                                    weight="duotone"
-                                                    className={cn(
-                                                        "!size-6 text-muted-foreground",
-                                                        isActive && "text-primary"
-                                                    )}
-                                                />
-                                                <span className='hidden'>{menuItem.title}</span>
+                                                <Link href={singleItem.url} className="flex items-center gap-2.5">
+                                                    <Icon
+                                                        name={singleItem.icon || group.icon}
+                                                        weight={isActive ? "fill" : "duotone"}
+                                                        className={cn(
+                                                            "!size-5 shrink-0",
+                                                            isActive ? "text-white" : "text-muted-foreground"
+                                                        )}
+                                                    />
+                                                    <span className={cn("truncate text-xs font-medium", isUrdu && "font-nastaliq text-sm")}>
+                                                        {label}
+                                                    </span>
+                                                </Link>
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
-                                    )
-                                })}
-                            </SidebarMenu>
-                        </SidebarGroupContent>
-                    </SidebarGroup>
+                                    );
+                                }
 
-                    <SidebarGroup className='mt-auto'>
-                        <SidebarGroupContent className="px-1.5 md:px-0">
-                            <SidebarMenu className='px-1'>
-                                <SidebarMenuItem>
-                                    <SidebarMenuButton
-                                        className={cn(
-                                            "flex items-center justify-center rounded-md py-[18px] mb-2 cursor-pointer",
-                                        )}
-                                        tooltip={{
-                                            children: "Support",
-                                            hidden: false,
-                                        }}
-                                    >
-                                        <Icon
-                                            name={"QuestionIcon"}
-                                            weight="duotone"
-                                            className={cn(
-                                                "!size-6 text-muted-foreground",
-                                            )}
-                                        />
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                                <SidebarMenuItem>
-                                    <SidebarMenuButton
-                                        className={cn(
-                                            "flex items-center justify-center rounded-md py-[18px] mb-2 cursor-pointer",
-                                        )}
-                                        tooltip={{
-                                            children: "Live Chat",
-                                            hidden: false,
-                                        }}
-                                    >
-                                        <Icon
-                                            name={"ChatsIcon"}
-                                            weight="duotone"
-                                            className={cn(
-                                                "!size-6 text-muted-foreground",
-                                            )}
-                                        />
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            </SidebarMenu>
-                        </SidebarGroupContent>
-                    </SidebarGroup>
-                </SidebarContent>
+                                // Collapsible group with multiple sub-items (Merchants, Farmers, Masters, System)
+                                const isExpanded = !!openGroups[group.id];
+                                const groupLabel = t(group.title);
 
-                <SidebarFooter>
-                    <NavUser />
-                </SidebarFooter>
-            </Sidebar>
-
-            <Sidebar
-                collapsible="none"
-                className="hidden flex-1 md:flex"
-            >
-                <SidebarHeader className="gap-3.5 p-4">
-                    <div className="w-full flex gap-3 items-center text-md text-secondary-foreground bg-white border rounded-md py-1 px-2 shadow-xs">
-                        {activeItem?.icon && (<Icon name={activeItem.icon} weight='duotone' className="!size-5 text-muted-foreground" />)}
-                        {activeItem?.title}
-                    </div>
-                </SidebarHeader>
-
-                <SidebarContent>
-                    <SidebarGroup className="px-3">
-                        <SidebarGroupContent>
-                            {activeItem?.items && activeItem?.items.map((item, index) => {
-                                const subNavIsActive = item.url === url;
                                 return (
-                                    <div key={index} className='w-full cursor-pointer'>
-                                        <Link
-                                            href={item.url}
-                                            className={cn(
-                                                "text-foreground w-full py-1.5 px-2 rounded-md flex items-center gap-2.5 mb-1",
-                                                subNavIsActive && "text-primary bg-white border"
-                                            )}
-                                        >
-                                            {item?.icon && (
-                                                <Icon
-                                                    name={item.icon}
-                                                    weight='duotone'
+                                    <Collapsible
+                                        key={group.id}
+                                        open={isExpanded}
+                                        onOpenChange={() => toggleGroup(group.id)}
+                                        className="group/collapsible"
+                                    >
+                                        <SidebarMenuItem>
+                                            <CollapsibleTrigger asChild>
+                                                <SidebarMenuButton
+                                                    tooltip={groupLabel}
                                                     className={cn(
-                                                        "!size-5 text-muted-foreground",
-                                                        subNavIsActive && "text-primary"
+                                                        "w-full justify-between font-semibold text-xs transition-colors rounded-lg h-9 px-2.5 cursor-pointer",
+                                                        groupHasActiveItem
+                                                            ? "text-green-900 font-bold bg-green-50/70"
+                                                            : "text-sidebar-foreground hover:bg-green-50/50 hover:text-green-900"
                                                     )}
-                                                />
-                                            )}
-                                            <span className='font-medium'>{item.title}</span>
-                                        </Link>
-                                    </div>
-                                )
+                                                >
+                                                    <div className="flex items-center gap-2.5 min-w-0">
+                                                        <Icon
+                                                            name={group.icon}
+                                                            weight={groupHasActiveItem ? "fill" : "duotone"}
+                                                            className={cn(
+                                                                "!size-5 shrink-0",
+                                                                groupHasActiveItem ? "text-green-700" : "text-muted-foreground"
+                                                            )}
+                                                        />
+                                                        <span className={cn("truncate", isUrdu && "font-nastaliq text-sm")}>
+                                                            {groupLabel}
+                                                        </span>
+                                                    </div>
+                                                    <CaretRightIcon
+                                                        className={cn(
+                                                            "size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[collapsible=icon]:hidden",
+                                                            isExpanded && "rotate-90 rtl:rotate-90",
+                                                            !isExpanded && "rtl:rotate-180"
+                                                        )}
+                                                    />
+                                                </SidebarMenuButton>
+                                            </CollapsibleTrigger>
+                                            <CollapsibleContent>
+                                                <SidebarMenuSub className="ms-3.5 my-1 border-s border-green-200 ps-2 gap-0.5">
+                                                    {group.items.map((subItem) => {
+                                                        const isSubActive = url === subItem.url;
+                                                        const subLabel = t(subItem.title);
+
+                                                        return (
+                                                            <SidebarMenuSubItem key={subItem.url}>
+                                                                <SidebarMenuSubButton
+                                                                    asChild
+                                                                    isActive={isSubActive}
+                                                                    className={cn(
+                                                                        "rounded-md py-1.5 px-2 transition-colors text-xs font-medium h-8",
+                                                                        isSubActive
+                                                                            ? "bg-green-700 text-white font-semibold shadow-xs hover:bg-green-800 hover:text-white"
+                                                                            : "text-sidebar-foreground/80 hover:bg-green-50 hover:text-green-900"
+                                                                    )}
+                                                                >
+                                                                    <Link href={subItem.url} className="flex items-center gap-2">
+                                                                        <Icon
+                                                                            name={subItem.icon}
+                                                                            weight={isSubActive ? "fill" : "duotone"}
+                                                                            className={cn(
+                                                                                "!size-4 shrink-0",
+                                                                                isSubActive ? "text-white" : "text-muted-foreground"
+                                                                            )}
+                                                                        />
+                                                                        <span className={cn("truncate", isUrdu && "font-nastaliq text-xs")}>
+                                                                            {subLabel}
+                                                                        </span>
+                                                                    </Link>
+                                                                </SidebarMenuSubButton>
+                                                            </SidebarMenuSubItem>
+                                                        );
+                                                    })}
+                                                </SidebarMenuSub>
+                                            </CollapsibleContent>
+                                        </SidebarMenuItem>
+                                    </Collapsible>
+                                );
                             })}
-                        </SidebarGroupContent>
-                    </SidebarGroup>
-                </SidebarContent>
-            </Sidebar>
-        </Sidebar >
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+            </SidebarContent>
+
+            {/* Sidebar User Footer */}
+            <SidebarFooter className="border-t p-2">
+                <NavUser />
+            </SidebarFooter>
+
+            <SidebarRail />
+        </Sidebar>
     );
 }

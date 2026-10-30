@@ -50,7 +50,10 @@ class HandleInertiaRequests extends Middleware
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
-            'currencySymbol' => fn(): string => Currency::where('is_current', true)->first()?->label ?? '$',
+            'currencySymbol' => fn(): string => Currency::where('is_current', true)->first()?->label ?? 'Rs',
+            'locale' => fn(): string => $request->user()?->locale ?? session('locale', 'en'),
+            'showLegacyPos' => config('jkc.show_legacy_pos', false),
+            'jkcBranding' => config('jkc.company'),
             //'quote' => ['message' => trim($message), 'author' => trim($author)],
         ];
     }

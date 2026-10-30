@@ -7,6 +7,16 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
+Route::post('locale', function (\Illuminate\Http\Request $request) {
+    $request->validate(['locale' => 'required|in:en,ur']);
+    $locale = $request->input('locale');
+    session(['locale' => $locale]);
+    if ($user = $request->user()) {
+        $user->update(['locale' => $locale]);
+    }
+    return response()->json(['success' => true, 'locale' => $locale]);
+})->name('locale.update');
+
 Route::middleware(['auth', 'verified'])
     ->group(function () {
         Route::get('dashboard', [PageController::class, 'dashboard'])
@@ -14,15 +24,21 @@ Route::middleware(['auth', 'verified'])
     });
 
 require __DIR__ . '/auth.php';
-require __DIR__ . "/attributes.php";
-require __DIR__ . '/brands.php';
-require __DIR__ . '/categories.php';
-require __DIR__ . '/customers.php';
-require __DIR__ . '/employees.php';
-require __DIR__ . '/expenses.php';
-require __DIR__ . '/products.php';
-require __DIR__ . '/purchases.php';
-require __DIR__ . '/sales.php';
+
+if (config('jkc.show_legacy_pos', false)) {
+    require __DIR__ . "/attributes.php";
+    require __DIR__ . '/brands.php';
+    require __DIR__ . '/categories.php';
+    require __DIR__ . '/customers.php';
+    require __DIR__ . '/employees.php';
+    require __DIR__ . '/expenses.php';
+    require __DIR__ . '/products.php';
+    require __DIR__ . '/purchases.php';
+    require __DIR__ . '/sales.php';
+    require __DIR__ . '/suppliers.php';
+}
+
+require __DIR__ . '/masters.php';
+require __DIR__ . '/merchants.php';
 require __DIR__ . '/settings.php';
-require __DIR__ . '/suppliers.php';
 require __DIR__ . '/users.php';

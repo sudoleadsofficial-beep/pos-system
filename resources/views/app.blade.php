@@ -16,6 +16,10 @@
                         document.documentElement.classList.add('dark');
                     }
                 }
+
+                const savedLocale = localStorage.getItem('jkc_locale') || '{{ session("locale", "en") }}';
+                document.documentElement.lang = savedLocale;
+                document.documentElement.dir = savedLocale === 'ur' ? 'rtl' : 'ltr';
             })();
         </script>
 
@@ -30,9 +34,10 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name', 'JKC - Jaffer Khan & Brother Company') }}</title>
 
         <!-- Fonts -->
+        <link rel="stylesheet" href="/fonts/fonts.css">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap" rel="stylesheet">

@@ -1,160 +1,266 @@
 import { NavGroup, NavItem } from "@/types";
 
-const sidebarNav: NavGroup[] = [
+export const jkcSidebarNav: NavGroup[] = [
     {
-        id: "1",
-        title: "Overview",
-        icon: "CommandIcon",
+        id: "home",
+        title: "nav.home",
+        icon: "HouseIcon",
         isGroup: true,
         items: [
             {
-                title: 'Dashboard',
-                url: '/dashboard',
-                icon: "HouseIcon",
-            },
-            {
-                title: "Daily Overivew",
-                url: '/overview',
-                icon: "SquaresFourIcon",
+                title: "nav.dashboard",
+                url: "/dashboard",
+                icon: "ChartPieSliceIcon",
             },
         ],
-        includeRoutes: ['dashboard']
+        includeRoutes: ["dashboard"]
     },
     {
-        id: "2",
-        title: "Operations",
-        icon: "CardsThreeIcon",
+        id: "merchants",
+        title: "nav.merchant_side",
+        icon: "UsersIcon",
         isGroup: true,
         items: [
             {
-                title: 'POS',
-                icon: "CashRegisterIcon",
-                url: '/pos',
-            },
-            {
-                title: 'Purchase',
-                icon: "CoinsIcon",
-                url: '/purchases',
-            },
-            {
-                title: 'Sales',
+                title: "nav.amroza",
+                url: "/amroza",
                 icon: "TagIcon",
-                url: '/sales',
             },
             {
-                title: 'Expenses',
-                icon: "ReceiptXIcon",
-                url: '/expenses',
+                title: "nav.naqdi",
+                url: "/naqdi",
+                icon: "CoinsIcon",
+            },
+            {
+                title: "nav.wasooli",
+                url: "/wasooli",
+                icon: "HandCoinsIcon",
+            },
+            {
+                title: "nav.merchant_amroza",
+                url: "/merchant-amroza",
+                icon: "CalendarDotsIcon",
+            },
+            {
+                title: "nav.merchant_wasooli",
+                url: "/merchant-wasooli",
+                icon: "ClockCountdownIcon",
+            },
+            {
+                title: "nav.amroza_detail",
+                url: "/amroza-detail",
+                icon: "ListBulletsIcon",
+            },
+            {
+                title: "nav.wasooli_detail",
+                url: "/wasooli-detail",
+                icon: "ListChecksIcon",
+            },
+            {
+                title: "nav.amroza_wasooli",
+                url: "/amroza-wasooli",
+                icon: "ArrowsLeftRightIcon",
             },
         ],
         includeRoutes: [
-            'pos',
-            'purchases',
-            'sales',
-            'expenses',
+            "amroza",
+            "naqdi",
+            "wasooli",
+            "merchant-amroza",
+            "merchant-wasooli",
+            "amroza-detail",
+            "wasooli-detail",
+            "amroza-wasooli"
         ]
     },
     {
-        id: "3",
-        title: "Products",
-        icon: "PackageIcon",
+        id: "farmers",
+        title: "nav.farmer_side",
+        icon: "TruckIcon",
         isGroup: true,
         items: [
             {
-                title: 'Attributes',
-                icon: "SlidersIcon",
-                url: '/attributes',
+                title: "nav.register",
+                url: "/register-consignment",
+                icon: "TruckIcon",
             },
             {
-                title: 'Brands',
-                icon: "ArchiveIcon",
-                url: '/brands',
+                title: "nav.bijak",
+                url: "/bijak",
+                icon: "ReceiptXIcon",
             },
             {
-                title: 'Categories',
-                url: '/categories',
-                icon: "FolderIcon",
+                title: "nav.general_bill",
+                url: "/general-bill",
+                icon: "FileTextIcon",
             },
             {
-                title: 'Products',
-                url: '/products',
+                title: "nav.khata",
+                url: "/khata",
+                icon: "BookOpenIcon",
+            },
+            {
+                title: "nav.bari_detail",
+                url: "/bari-detail",
+                icon: "BookmarksIcon",
+            },
+            {
+                title: "nav.bari_jama_banam",
+                url: "/bari-jama-banam",
+                icon: "ChartLineUpIcon",
+            },
+            {
+                title: "nav.khata_index",
+                url: "/khata-index",
+                icon: "ListNumbersIcon",
+            },
+        ],
+        includeRoutes: [
+            "register",
+            "bijak",
+            "general-bill",
+            "khata",
+            "bari-detail",
+            "bari-jama-banam",
+            "khata-index"
+        ]
+    },
+    {
+        id: "cash_book",
+        title: "nav.cash_book",
+        icon: "BookBookmarkIcon",
+        isGroup: true,
+        items: [
+            {
+                title: "nav.general_ledger",
+                url: "/general-ledger",
+                icon: "BookBookmarkIcon",
+            },
+        ],
+        includeRoutes: ["general-ledger"]
+    },
+    {
+        id: "masters",
+        title: "nav.masters",
+        icon: "DatabaseIcon",
+        isGroup: true,
+        items: [
+            {
+                title: "nav.merchants",
+                url: "/masters/merchants",
+                icon: "UsersIcon",
+            },
+            {
+                title: "nav.farmers",
+                url: "/masters/farmers",
+                icon: "UserCircleIcon",
+            },
+            {
+                title: "nav.marks",
+                url: "/masters/marks",
+                icon: "BookmarksIcon",
+            },
+            {
+                title: "nav.items",
+                url: "/masters/items",
                 icon: "PackageIcon",
             },
             {
-                title: 'Suppliers',
-                url: '/suppliers',
-                icon: "TruckIcon",
+                title: "nav.areas",
+                url: "/masters/areas",
+                icon: "MapPinIcon",
             },
         ],
         includeRoutes: [
-            'attributes',
-            'brands',
-            'categories',
-            'products',
-            'suppliers',
+            "merchants",
+            "farmers",
+            "marks",
+            "items",
+            "areas"
         ]
     },
     {
-        id: "4",
-        title: "Users",
-        icon: "UserCircleIcon",
+        id: "reports",
+        title: "nav.reports",
+        icon: "PrinterIcon",
         isGroup: true,
         items: [
             {
-                title: 'Customers',
-                url: '/customers',
-                icon: "UsersIcon"
+                title: "nav.reports",
+                url: "/reports",
+                icon: "PrinterIcon",
             },
-            {
-                title: 'Employees',
-                url: '/employees',
-                icon: "IdentificationBadgeIcon"
-            }
         ],
-        includeRoutes: [
-            'customers',
-            'employees',
-        ]
+        includeRoutes: ["reports"]
     },
     {
-        id: "5",
-        title: "Settings",
+        id: "system",
+        title: "nav.system",
         icon: "GearIcon",
         isGroup: true,
         items: [
             {
-                title: "Currency",
-                url: '/settings/currency',
-                icon: "CurrencyInrIcon",
+                title: "nav.settings",
+                url: "/settings/currency",
+                icon: "GearIcon",
             },
             {
-                title: "App Options",
-                url: '/settings/options/shop',
-                icon: "GearIcon",
+                title: "nav.backup",
+                url: "/backup",
+                icon: "CloudArrowUpIcon",
+            },
+            {
+                title: "nav.users",
+                url: "/users",
+                icon: "UserGearIcon",
             },
         ],
         includeRoutes: [
-            'settings',
-            'currency',
+            "settings",
+            "backup",
+            "users"
         ]
     }
-]
+];
+
+const legacySidebarNav: NavGroup[] = [
+    {
+        id: "legacy_pos",
+        title: "Legacy POS",
+        icon: "CashRegisterIcon",
+        isGroup: true,
+        items: [
+            { title: "POS", icon: "CashRegisterIcon", url: "/pos" },
+            { title: "Purchases", icon: "CoinsIcon", url: "/purchases" },
+            { title: "Sales", icon: "TagIcon", url: "/sales" },
+            { title: "Expenses", icon: "ReceiptXIcon", url: "/expenses" },
+            { title: "Products", icon: "PackageIcon", url: "/products" },
+            { title: "Categories", icon: "FolderIcon", url: "/categories" },
+            { title: "Customers", icon: "UsersIcon", url: "/customers" },
+            { title: "Employees", icon: "IdentificationBadgeIcon", url: "/employees" },
+        ],
+        includeRoutes: ["pos", "purchases", "sales", "expenses", "products", "categories", "customers", "employees"]
+    }
+];
 
 const footerNav: NavItem[] = [
     {
-        title: "Help/Support",
-        url: '/help',
+        title: "nav.support",
+        url: "/help",
         icon: "QuestionIcon",
     },
     {
-        title: "Live Chat",
-        url: '/live-chat',
+        title: "nav.live_chat",
+        url: "/live-chat",
         icon: "ChatsIcon"
     }
-]
+];
 
+export const getNavigationItems = (showLegacyPos = false) => {
+    return {
+        sideNav: showLegacyPos ? [...jkcSidebarNav, ...legacySidebarNav] : [...jkcSidebarNav],
+        footerNav: [...footerNav],
+    };
+};
 
-export const navigationItems = {
-    sideNav: [...sidebarNav],
-    footerNav: [...footerNav],
-}
+export const navigationItems = getNavigationItems(false);

@@ -178,3 +178,24 @@
         @apply bg-background text-foreground;
     }
 }
+
+html[lang="ur"] body,
+html[dir="rtl"] body {
+    font-family: 'Noto Naskh Arabic', system-ui, -apple-system, sans-serif;
+    line-height: 1.8;
+}
+
+html[lang="ur"] h1,
+html[lang="ur"] h2,
+html[lang="ur"] h3,
+html[lang="ur"] h4,
+html[lang="ur"] .font-nastaliq {
+    font-family: 'Noto Nastaliq Urdu', 'Noto Naskh Arabic', serif;
+    line-height: 2.2;
+}
+
+/* RTL icon mirroring for direction-sensitive icons */
+html[dir="rtl"] .rtl-flip {
+    transform: scaleX(-1);
+}
+
