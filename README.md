@@ -23,13 +23,6 @@ Keyboard search, instant code-to-name lookup, and modal list picker with current
 
 ---
 
-### 3. Application Dashboard & Unified Sidebar
-Clean layout with single collapsible sidebar, bilingual toggle (English ↔ اردو), and real-time commission business statistics.
-
-![Branding & Dashboard](docs/screenshots/branding-dashboard.png)
-
----
-
 ## ✨ Core Modules & Capabilities
 
 ### 🌐 1. Bilingual & RTL Support (اردو / English)
