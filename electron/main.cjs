@@ -80,8 +80,8 @@ function createWindow() {
         title: 'JKC - Vegetable Commission Agent System',
         icon: fs.existsSync(iconPath) ? iconPath : undefined,
         autoHideMenuBar: true,
-        backgroundColor: '#f8fafc',
-        show: false, // Don't show until ready
+        backgroundColor: '#ffffff',
+        show: true,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -92,22 +92,23 @@ function createWindow() {
     // Remove default menu bar
     Menu.setApplicationMenu(null);
 
-    // Show window once DOM is loaded to prevent flickering
-    mainWindow.once('ready-to-show', () => {
-        mainWindow.show();
-        mainWindow.maximize();
+    mainWindow.maximize();
+    mainWindow.focus();
+
+    mainWindow.webContents.on('did-finish-load', () => {
+        console.log('[JKC Desktop] Page loaded successfully');
     });
 
-    mainWindow.loadURL(START_URL);
-
-    // If load fails, retry after a second
-    mainWindow.webContents.on('did-fail-load', () => {
+    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+        console.log('[JKC Desktop] Load failed, retrying...', errorCode, errorDescription);
         setTimeout(() => {
             if (mainWindow && !mainWindow.isDestroyed()) {
                 mainWindow.loadURL(START_URL);
             }
-        }, 1000);
+        }, 1500);
     });
+
+    mainWindow.loadURL(START_URL);
 
     mainWindow.on('closed', () => {
         mainWindow = null;
