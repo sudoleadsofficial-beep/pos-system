@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JKC POS - Starting...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            width: 480px;
+            height: 320px;
+            background: linear-gradient(135deg, #064e3b 0%, #042f2e 50%, #022c22 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 16px;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+        /* Background decorative grid pattern */
+        .bg-pattern {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 16px 16px;
+            pointer-events: none;
+        }
+        .logo-wrap {
+            position: relative;
+            width: 72px;
+            height: 72px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo-glow {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 18px;
+            background: #10b981;
+            filter: blur(14px);
+            opacity: 0.45;
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.35; transform: scale(0.95); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        .logo-svg {
+            position: relative;
+            width: 68px;
+            height: 68px;
+            border-radius: 14px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .title {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+            margin-bottom: 2px;
+            text-align: center;
+        }
+        .urdu-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #a7f3d0;
+            margin-bottom: 8px;
+            text-align: center;
+            direction: rtl;
+        }
+        .subtitle {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #6ee7b7;
+            font-weight: 600;
+            margin-bottom: 22px;
+            opacity: 0.9;
+        }
+        .progress-track {
+            width: 100%;
+            max-width: 340px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 12px;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #10b981, #34d399, #6ee7b7);
+            border-radius: 999px;
+            animation: load 2.5s ease-out forwards;
+        }
+        @keyframes load {
+            0% { width: 0%; }
+            30% { width: 45%; }
+            70% { width: 85%; }
+            100% { width: 100%; }
+        }
+        .status-text {
+            font-size: 12px;
+            color: #d1fae5;
+            font-weight: 500;
+            min-height: 16px;
+        }
+        .badge {
+            position: absolute;
+            bottom: 12px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+
+    <div class="logo-wrap">
+        <div class="logo-glow"></div>
+        <svg class="logo-svg" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="10" fill="#059669" />
+            <path d="M12 24C12 16 22 12 34 13C34 25 28 35 18 35C14.6863 35 12 30.0751 12 24Z" fill="white" />
+            <path d="M20 31C24 27 28 21 31 16" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" />
+            <text x="24" y="44" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold" fontFamily="sans-serif">JKC</text>
+        </svg>
+    </div>
+
+    <div class="title">Jaffer Khan & Brother Company</div>
+    <div class="urdu-title">جعفر خان اینڈ برادر کمپنی (سبزی کمیشن ایجنٹ)</div>
+    <div class="subtitle">Offline Desktop POS • 2026</div>
+
+    <div class="progress-track">
+        <div class="progress-bar"></div>
+    </div>
+
+    <div class="status-text" id="statusMsg">Starting offline database engine...</div>
+
+    <div class="badge">v1.0.0 • SQLite WAL Protected</div>
+
+    <script>
+        const statusMsg = document.getElementById('statusMsg');
+        const steps = [
+            { time: 400, text: "Verifying SQLite integrity..." },
+            { time: 1000, text: "Initializing local services..." },
+            { time: 1800, text: "Loading Mandi POS Interface..." },
+            { time: 2300, text: "Ready!" }
+        ];
+        steps.forEach(s => {
+            setTimeout(() => {
+                if (statusMsg) statusMsg.textContent = s.text;
+            }, s.time);
+        });
+    </script>
+</body>
+</html>
