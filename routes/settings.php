@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\BusinessSettingsController;
 use App\Http\Controllers\Settings\CurrencyController;
 use App\Http\Controllers\Settings\OptionController;
 use Illuminate\Support\Facades\Route;
@@ -10,6 +11,12 @@ Route::middleware('auth')->group(function () {
     Route::get('users/appearance', function () {
         return Inertia::render('users/appearance');
     })->name('appearance');
+
+    // The main settings page: business information, display, printing, general.
+    Route::get('settings', [BusinessSettingsController::class, 'index'])->name('settings.index');
+    Route::post('settings', [BusinessSettingsController::class, 'update'])->name('settings.update');
+    Route::post('settings/logo', [BusinessSettingsController::class, 'logo'])->name('settings.logo');
+    Route::delete('settings/logo', [BusinessSettingsController::class, 'removeLogo'])->name('settings.logo.destroy');
 
     Route::prefix('settings')->group(function () {
         Route::resource('currency', CurrencyController::class)

@@ -39,7 +39,7 @@ Keyboard search, instant code-to-name lookup, and modal list picker with current
 
 ### 💰 3. Merchant Side Operations (بیوپاری کھاتہ و فروخت)
 - **Amroza Entry (امروزہ فروخت):** High-speed daily sales auction screen with shortcut-driven fields:
-  - Line calculation: $\text{Gross} = (\text{Weight} \times \text{Rate}) + \text{Bardana}$ or $(\text{Nag} \times \text{Rate}) + \text{Bardana}$.
+  - Line calculation: $\text{Gross} = (\text{Nag} \times \text{Rate}) + \text{Bardana}$. Rate is the price per the item's selling unit (Bori/Bag, Peti/Crate, Nag). Weight is the total physical weight of the line - recorded and reported separately, never used as the amount multiplier.
   - Instant Cash (نقدی) vs Credit (ادہاری) classification.
   - **Am Total (ام ٹوٹل):** Instant modal breaking down daily sales by merchant and by item.
 - **Naqdi Screen (نقدی روزنامچہ):** Tracking cash recoveries against daily auction.
@@ -52,6 +52,15 @@ Keyboard search, instant code-to-name lookup, and modal list picker with current
   - Wasooli Detail (وصولی تفصیل)
   - Amroza / Wasooli Comparative Ledger (امروزہ و وصولی بیلنس)
   - All reports feature standard A4 browser print letterheads with Urdu typography.
+
+### 🥬 4. Farmer Side Operations (کسانوں کی خریداری و اسٹاک)
+- **Purchase / Arrival (خریداری / آمد):** Records vegetables received from a farmer.
+  - Line calculation: $\text{Amount} = (\text{Nag} \times \text{Rate}) + \text{Charges}$. The purchase rate is the price per selling unit (bag / piece), the same basis as the Amroza sale rate. Weight is the total physical weight of the line - recorded and reported separately, never used as the amount multiplier.
+  - Farmer, Mark (bari), Item, bags, weight, purchase rate, packing charges, amount paid on the spot and notes.
+  - Every purchase writes to the farmer's **khata** automatically: the purchase raises what the farmer is owed (Jama), an on-the-spot payment lowers it (Banam). Editing or removing a purchase updates the same ledger rows - never a second pair.
+  - A later payment to a farmer can be recorded against the farmer at any time.
+- **Inventory (اسٹاک):** Stock per item - bags and weight received from farmers, bags and weight sold to buyers, and what is left. The figures are derived from the two transaction registers, so an edited or removed record is reflected at once and stock can never be deducted twice. A sale is never blocked for lack of stock; a shortfall is shown in red.
+- **Farmer Reports (کسانوں کی رپورٹس):** Farmer purchase history, farmer outstanding balances, inventory summary and a daily purchase summary.
 
 ---
 

@@ -54,6 +54,8 @@ class HandleInertiaRequests extends Middleware
             'locale' => fn(): string => $request->user()?->locale ?? session('locale', 'en'),
             'showLegacyPos' => config('jkc.show_legacy_pos', false),
             'jkcBranding' => config('jkc.company'),
+            // Business information for the banner, the logo and every printout.
+            'business' => fn(): array => app(\App\Services\BusinessSettingsService::class)->business(),
             //'quote' => ['message' => trim($message), 'author' => trim($author)],
         ];
     }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import useBusiness from '@/hooks/use-business';
 
 interface Props {
     title: string;
@@ -13,20 +14,22 @@ export default function PrintLetterhead({ title, titleUrdu, date, from_date, to_
     const { t, i18n } = useTranslation();
     const isUrdu = i18n.language === 'ur';
 
+    const info = useBusiness();
+
+    const phones = [info.phone, info.phone2].filter(Boolean).join(' | ');
+
     return (
         <div className="border-b-2 border-green-800 pb-3 mb-4 text-center">
             {/* Header / Bilingual Company Letterhead */}
             <div className="flex items-center justify-between gap-4">
                 <div className="text-start">
                     <h2 className="text-base font-bold text-green-900 tracking-tight">
-                        {t('branding.name')}
+                        {isUrdu ? info.name_ur || info.name : info.name}
                     </h2>
                     <p className="text-xs text-gray-600">
-                        {t('branding.tagline')}
+                        {isUrdu ? info.tagline_ur || info.tagline : info.tagline}
                     </p>
-                    <p className="text-[11px] text-gray-500 max-w-xs">
-                        {t('branding.address')}
-                    </p>
+                    <p className="text-[11px] text-gray-500 max-w-xs">{info.address}</p>
                 </div>
 
                 {/* Center Title Badge */}
@@ -44,15 +47,19 @@ export default function PrintLetterhead({ title, titleUrdu, date, from_date, to_
                 </div>
 
                 <div className="text-end">
-                    <h2 className="text-lg font-bold text-green-900 font-nastaliq">
-                        جعفر خان اینڈ برادرز کمپنی
-                    </h2>
-                    <p className="text-xs text-green-800 font-nastaliq">
-                        سبزی کمیشن ایجنٹ — نیو سبزی منڈی کراچی
-                    </p>
-                    <p className="text-[11px] font-mono text-gray-600">
-                        0303-8598049 | 0340-2108382
-                    </p>
+                    {info.logo ? (
+                        <img src={`/${info.logo}`} alt={info.name} className="h-12 w-auto object-contain ms-auto" />
+                    ) : (
+                        <h2 className="text-lg font-bold text-green-900 font-nastaliq">
+                            {isUrdu ? info.name_ur || info.name : info.name}
+                        </h2>
+                    )}
+                    {info.logo && (
+                        <p className="text-xs text-green-800 font-nastaliq">
+                            {isUrdu ? info.tagline_ur || info.tagline : info.tagline}
+                        </p>
+                    )}
+                    {phones && <p className="text-[11px] font-mono text-gray-600">{phones}</p>}
                 </div>
             </div>
         </div>

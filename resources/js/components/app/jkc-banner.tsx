@@ -1,9 +1,16 @@
 import { useTranslation } from 'react-i18next';
+import useBusiness from '@/hooks/use-business';
 import AppLogoIcon from './app-logo-icon';
 
 export function JkcBanner() {
     const { t, i18n } = useTranslation();
     const isUrdu = i18n.language === 'ur';
+
+    const business = useBusiness();
+
+    const name = isUrdu ? business.name_ur || business.name : business.name;
+    const tagline = isUrdu ? business.tagline_ur || business.tagline : business.tagline;
+    const phones = [business.phone, business.phone2].filter(Boolean).join(' | ');
 
     return (
         <div className="relative overflow-hidden rounded-xl border border-emerald-700/40 bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 text-white p-6 shadow-sm">
@@ -11,7 +18,11 @@ export function JkcBanner() {
             <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-inner">
-                        <AppLogoIcon className="size-12" />
+                        {business.logo ? (
+                            <img src={`/${business.logo}`} alt={name} className="size-12 object-contain" />
+                        ) : (
+                            <AppLogoIcon className="size-12" />
+                        )}
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
@@ -21,15 +32,16 @@ export function JkcBanner() {
                             <span className="text-xs text-emerald-200/80">Karachi Sabzi Mandi</span>
                         </div>
                         <h1 className={`text-2xl md:text-3xl font-extrabold tracking-tight mt-1 ${isUrdu ? 'font-nastaliq text-3xl md:text-4xl leading-relaxed' : ''}`}>
-                            {t('branding.name')}
+                            {name}
                         </h1>
                         <p className="text-sm text-emerald-100 font-medium mt-0.5">
-                            {t('branding.tagline')} — {t('branding.address')}
+                            {tagline}
+                            {business.address ? ` — ${business.address}` : ''}
                         </p>
                     </div>
                 </div>
                 <div className="text-start md:text-end text-xs text-emerald-200/90 space-y-1">
-                    <div className="font-medium">{t('branding.phones')}</div>
+                    {phones && <div className="font-medium">{phones}</div>}
                     <div className="text-[11px] text-emerald-300/70">JKC Commission Agent Software 2026</div>
                 </div>
             </div>

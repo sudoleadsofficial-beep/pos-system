@@ -42,4 +42,6 @@ require __DIR__ . '/masters.php';
 require __DIR__ . '/merchants.php';
 require __DIR__ . '/parties.php';
 require __DIR__ . '/settings.php';
+require __DIR__ . '/system.php';
+require __DIR__ . '/farmers.php';
 require __DIR__ . '/users.php';

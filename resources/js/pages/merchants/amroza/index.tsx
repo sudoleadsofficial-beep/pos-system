@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
 import ListPicker, { type PickerItem } from '@/components/app/list-picker';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
 interface MerchantOption {
@@ -39,6 +40,7 @@ interface Sale {
     date: string;
     merchant_id: number;
     item_id: number;
+    farmer_purchase_id?: number | null;
     nag: number;
     weight: number;
     rate: number;
@@ -72,6 +74,19 @@ interface Summary {
     credit_amount: number;
 }
 
+interface OpenPurchase {
+    id: number;
+    reference: string;
+    date: string;
+    item_id: number;
+    item_name: string | null;
+    farmer_name: string | null;
+    farmer_name_ur: string | null;
+    nag: number;
+    weight: number;
+    remaining_bags: number;
+}
+
 interface Props {
     sales: Sale[];
     summary: Summary;
@@ -79,6 +94,8 @@ interface Props {
     items: ItemOption[];
     topItems?: ItemOption[];
     recentRates?: Record<number, number>;
+    availableStock?: Record<string, number>;
+    openPurchases?: OpenPurchase[];
     filters: {
         date: string;
         search?: string;
@@ -92,6 +109,8 @@ export default function AmrozaIndex({
     items,
     topItems = [],
     recentRates = {},
+    availableStock = {},
+    openPurchases = [],
     filters,
 }: Props) {
     const { t, i18n } = useTranslation();
@@ -149,6 +168,7 @@ export default function AmrozaIndex({
         merchant_id: '',
         merchant_code: '',
         item_id: '',
+        farmer_purchase_id: '',
         nag: '',
         weight: '',
         rate: '',
@@ -185,7 +205,27 @@ export default function AmrozaIndex({
         return items.find(i => String(i.id) === String(data.item_id));
     }, [items, data.item_id]);
 
-    const lineAmount = numWeight > 0 ? (numWeight * numRate) : (numNag * numRate);
+    // What is still in stock for the selected item. A sale is never blocked
+    // for lack of stock - the number is shown so the operator can see it.
+    const stockBags = useMemo(() => {
+        if (!currentItem) {
+            return 0;
+        }
+
+        return Number(availableStock[String(currentItem.id)] ?? 0);
+    }, [availableStock, currentItem]);
+
+    // The arrivals the sale can be attributed to.
+    const stockPurchases = useMemo(() => {
+        return openPurchases.filter(p => String(p.item_id) === String(data.item_id));
+    }, [openPurchases, data.item_id]);
+
+    const isStockShort = stockBags >= 0 && numNag > stockBags;
+
+    // POS V1 unit-based pricing: the amount is always Units (Nag) x Rate.
+    // Weight is the total physical weight of the line and is recorded for
+    // reporting only - it never multiplies the amount.
+    const lineAmount = numNag * numRate;
     const grossAmount = Math.round((lineAmount + numBardana) * 100) / 100;
 
     const recentItemRate = currentItem ? recentRates[currentItem.id] : null;
@@ -358,6 +398,7 @@ export default function AmrozaIndex({
             merchant_id: '',
             merchant_code: '',
             item_id: '',
+            farmer_purchase_id: '',
             nag: '',
             weight: '',
             rate: '',
@@ -380,6 +421,7 @@ export default function AmrozaIndex({
             merchant_id: String(sale.merchant_id),
             merchant_code: String(sale.merchant?.code || ''),
             item_id: String(sale.item_id),
+            farmer_purchase_id: String(sale.farmer_purchase_id || ''),
             nag: String(sale.nag),
             weight: String(sale.weight || ''),
             rate: String(sale.rate),
@@ -1019,6 +1061,56 @@ Thank you!`;
                             </div>
                         </div>
 
+                        {/* Stock: how much is on hand, and which arrival it came from */}
+                        {isUnitsUnlocked && (
+                            <div className="flex flex-wrap items-center gap-3 rounded-md border border-green-200 bg-green-50 px-2.5 py-1.5">
+                                <span className="text-xs font-semibold text-green-800">
+                                    {isUrdu ? 'اسٹاک' : 'Stock'}:
+                                </span>
+                                <span
+                                    className={`font-mono text-xs font-bold ${
+                                        isStockShort ? 'text-red-700' : 'text-green-800'
+                                    }`}
+                                >
+                                    {stockBags.toLocaleString()} {isUrdu ? 'بوری' : 'bags'}
+                                </span>
+                                {isStockShort && numNag > 0 && (
+                                    <span className="text-[11px] font-medium text-red-700">
+                                        {isUrdu
+                                            ? 'اسٹاک سے زیادہ فروخت ہو رہی ہے'
+                                            : 'Selling more than the recorded stock'}
+                                    </span>
+                                )}
+
+                                {stockPurchases.length > 0 && (
+                                    <div className="ms-auto flex items-center gap-2">
+                                        <label className="text-[11px] font-medium text-green-800">
+                                            {isUrdu ? 'اسٹاک کے منبع' : 'Stock from'}:
+                                        </label>
+                                        <Select
+                                            value={String(data.farmer_purchase_id)}
+                                            onValueChange={value => setData('farmer_purchase_id', value)}
+                                        >
+                                            <SelectTrigger className="h-7 w-56 border-green-300 bg-white text-xs">
+                                                <SelectValue
+                                                    placeholder={isUrdu ? 'اختیاری' : 'Optional'}
+                                                />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {stockPurchases.map(purchase => (
+                                                    <SelectItem key={purchase.id} value={String(purchase.id)}>
+                                                        {purchase.reference} -{' '}
+                                                        {isUrdu ? purchase.farmer_name_ur : purchase.farmer_name} (
+                                                        {purchase.nag})
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* 3. Live Calculation Line + Add Button */}
                         <div className="bg-emerald-950 text-white rounded-md p-2.5 shadow-inner flex flex-wrap items-center justify-between gap-2 border border-emerald-800">
                             <div className="flex items-center gap-2">
@@ -1026,15 +1118,9 @@ Thank you!`;
                                     {isUrdu ? 'حساب:' : 'Calculation:'}
                                 </span>
                                 <div className="text-sm md:text-base font-mono font-bold text-emerald-200" dir="ltr">
-                                    {numWeight > 0 ? (
-                                        <span>
-                                            {numWeight} × {numRate.toLocaleString()} = {(numWeight * numRate).toLocaleString()}
-                                        </span>
-                                    ) : (
-                                        <span>
-                                            {numNag} × {numRate.toLocaleString()} = {(numNag * numRate).toLocaleString()}
-                                        </span>
-                                    )}
+                                    <span>
+                                        {numNag} × {numRate.toLocaleString()} = {(numNag * numRate).toLocaleString()}
+                                    </span>
                                     {numBardana > 0 && (
                                         <span> + {numBardana.toLocaleString()}</span>
                                     )}

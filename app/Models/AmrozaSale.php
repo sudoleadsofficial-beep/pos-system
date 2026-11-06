@@ -15,6 +15,7 @@ class AmrozaSale extends Model
         'date',
         'merchant_id',
         'item_id',
+        'farmer_purchase_id',
         'nag',
         'weight',
         'rate',
@@ -42,20 +43,32 @@ class AmrozaSale extends Model
 
         static::saving(function ($sale) {
             if (empty($sale->payment_type)) {
-                $sale->payment_type = ($sale->merchant && (int)$sale->merchant->code === 1) ? 'naqdi' : 'udhaar';
+                $sale->payment_type = ($sale->merchant && (int) $sale->merchant->code === 1) ? 'naqdi' : 'udhaar';
             }
-            $weight = floatval($sale->weight);
+
+            // Weight and bardana are optional on the form. An empty box is
+            // submitted as an empty string, which Laravel turns into null,
+            // and both columns are NOT NULL - so an empty value has to be
+            // stored as 0. A weight that really was entered is kept as it was.
+            if ($sale->weight === null || $sale->weight === '') {
+                $sale->weight = 0;
+            }
+
+            if ($sale->bardana === null || $sale->bardana === '') {
+                $sale->bardana = 0;
+            }
+
             $nag = intval($sale->nag);
             $rate = floatval($sale->rate);
             $bardana = floatval($sale->bardana);
 
-            // Calculation rule from Section 11:
-            // Line amount = Nag x Rate, or Weight x Rate when Weight > 0
-            if ($weight > 0) {
-                $lineAmount = $weight * $rate;
-            } else {
-                $lineAmount = $nag * $rate;
-            }
+            // POS V1 unit-based pricing:
+            //   Line amount = Units (Nag) x Rate
+            // Rate is the price per the item's selling unit (Bori/Bag,
+            // Peti/Crate, Nag, ...). Weight is the TOTAL physical weight of
+            // the whole line and is recorded for reporting only - it never
+            // multiplies the amount.
+            $lineAmount = $nag * $rate;
 
             $sale->gross_amount = round($lineAmount + $bardana, 2);
 
@@ -73,6 +86,14 @@ class AmrozaSale extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
+    }
+
+    /**
+     * The arrival this sale came from, when it was attributed to one.
+     */
+    public function farmerPurchase(): BelongsTo
+    {
+        return $this->belongsTo(FarmerPurchase::class, 'farmer_purchase_id');
     }
 
     public function creator(): BelongsTo

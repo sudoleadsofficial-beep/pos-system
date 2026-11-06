@@ -36,12 +36,25 @@ export interface NavItem {
     icon?: keyof typeof PhosphorIcons | null;
 }
 
+export interface Business {
+    name: string;
+    name_ur: string;
+    tagline: string;
+    tagline_ur: string;
+    address: string;
+    phone: string;
+    phone2: string;
+    logo: string;
+    show_on_print: boolean;
+}
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
     ziggy: Config & { location: string };
     currencySymbol: string;
+    business: Business;
     [key: string]: unknown;
 }
 

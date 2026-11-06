@@ -3,16 +3,19 @@
 namespace App\Http\Controllers\Merchants;
 
 use App\Http\Controllers\Controller;
+use App\Models\FarmerPurchase;
 use App\Models\Item;
 use App\Models\Merchant;
 use App\Services\AmrozaService;
+use App\Services\InventoryService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class AmrozaController extends Controller
 {
     public function __construct(
-        protected AmrozaService $amrozaService
+        protected AmrozaService $amrozaService,
+        protected InventoryService $inventory,
     ) {}
 
     public function index(Request $request)
@@ -42,7 +45,7 @@ class AmrozaController extends Controller
             ->toArray();
 
         $topItems = collect();
-        if (!empty($topItemIds)) {
+        if (! empty($topItemIds)) {
             $topItems = $items->whereIn('id', $topItemIds)->values();
         }
         if ($topItems->count() < 6) {
@@ -57,6 +60,28 @@ class AmrozaController extends Controller
             ->unique('item_id')
             ->pluck('rate', 'item_id');
 
+        // Arrivals that still have stock, so a sale can be linked to the
+        // farmer the produce came from.
+        $openPurchases = FarmerPurchase::with(['farmer', 'item'])
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->limit(100)
+            ->get()
+            ->map(fn ($purchase) => [
+                'id' => $purchase->id,
+                'reference' => $purchase->reference,
+                'date' => $purchase->date->format('Y-m-d'),
+                'item_id' => $purchase->item_id,
+                'item_name' => $purchase->item?->name_en,
+                'farmer_name' => $purchase->farmer?->name_en,
+                'farmer_name_ur' => $purchase->farmer?->name_ur,
+                'nag' => (int) $purchase->nag,
+                'weight' => (float) $purchase->weight,
+                'remaining_bags' => $this->inventory->availableBags($purchase->item_id),
+            ])
+            ->values()
+            ->all();
+
         return Inertia::render('merchants/amroza/index', [
             'sales' => $sales,
             'summary' => $summary,
@@ -64,6 +89,8 @@ class AmrozaController extends Controller
             'items' => $items,
             'topItems' => $topItems,
             'recentRates' => $recentRates,
+            'availableStock' => $this->inventory->availableByItem(),
+            'openPurchases' => $openPurchases,
             'filters' => [
                 'date' => $date,
                 'search' => $search,
@@ -77,9 +104,10 @@ class AmrozaController extends Controller
             'date' => 'required|date',
             'merchant_id' => 'required|exists:merchants,id',
             'item_id' => 'required|exists:items,id',
-            'nag' => 'required|numeric|min:0',
+            'farmer_purchase_id' => 'nullable|exists:farmer_purchases,id',
+            'nag' => 'required|numeric|min:1',
             'weight' => 'nullable|numeric|min:0',
-            'rate' => 'required|numeric|min:0',
+            'rate' => 'required|numeric|min:0.01',
             'bardana' => 'nullable|numeric|min:0',
             'payment_type' => 'nullable|in:naqdi,udhaar',
         ]);
@@ -97,9 +125,10 @@ class AmrozaController extends Controller
             'date' => 'required|date',
             'merchant_id' => 'required|exists:merchants,id',
             'item_id' => 'required|exists:items,id',
-            'nag' => 'required|numeric|min:0',
+            'farmer_purchase_id' => 'nullable|exists:farmer_purchases,id',
+            'nag' => 'required|numeric|min:1',
             'weight' => 'nullable|numeric|min:0',
-            'rate' => 'required|numeric|min:0',
+            'rate' => 'required|numeric|min:0.01',
             'bardana' => 'nullable|numeric|min:0',
             'payment_type' => 'nullable|in:naqdi,udhaar',
         ]);

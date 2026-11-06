@@ -85,44 +85,21 @@ export const jkcSidebarNav: NavGroup[] = [
                 icon: "TruckIcon",
             },
             {
-                title: "nav.bijak",
-                url: "/bijak",
-                icon: "ReceiptXIcon",
+                title: "nav.farmer_inventory",
+                url: "/farmers/inventory",
+                icon: "StackIcon",
             },
             {
-                title: "nav.general_bill",
-                url: "/general-bill",
-                icon: "FileTextIcon",
-            },
-            {
-                title: "nav.khata",
-                url: "/khata",
-                icon: "BookOpenIcon",
-            },
-            {
-                title: "nav.bari_detail",
-                url: "/bari-detail",
-                icon: "BookmarksIcon",
-            },
-            {
-                title: "nav.bari_jama_banam",
-                url: "/bari-jama-banam",
-                icon: "ChartLineUpIcon",
-            },
-            {
-                title: "nav.khata_index",
-                url: "/khata-index",
-                icon: "ListNumbersIcon",
+                title: "nav.farmer_reports",
+                url: "/farmers/reports",
+                icon: "ChartBarIcon",
             },
         ],
         includeRoutes: [
-            "register",
-            "bijak",
-            "general-bill",
-            "khata",
-            "bari-detail",
-            "bari-jama-banam",
-            "khata-index"
+            "farmers.purchases",
+            "farmers.payments",
+            "farmers.inventory",
+            "farmers.reports"
         ]
     },
     {
@@ -227,24 +204,29 @@ export const jkcSidebarNav: NavGroup[] = [
         items: [
             {
                 title: "nav.settings",
-                url: "/settings/currency",
+                url: "/settings",
                 icon: "GearIcon",
             },
             {
                 title: "nav.backup",
-                url: "/backup",
+                url: "/system/backup",
                 icon: "CloudArrowUpIcon",
             },
             {
+                title: "nav.import",
+                url: "/system/import",
+                icon: "FileArrowUpIcon",
+            },
+            {
                 title: "nav.users",
-                url: "/users",
+                url: "/users/profile",
                 icon: "UserGearIcon",
             },
         ],
         includeRoutes: [
             "settings",
-            "backup",
-            "users"
+            "system",
+            "profile"
         ]
     }
 ];
