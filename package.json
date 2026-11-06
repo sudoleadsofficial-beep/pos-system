@@ -1,4 +1,8 @@
 {
+    "name": "jkc-pos",
+    "version": "1.0.0",
+    "description": "JKC Vegetable Commission Agent POS - Standalone Offline System",
+    "author": "Jaffer Khan & Brother Company",
     "private": true,
     "type": "module",
     "main": "./electron/main.cjs",
@@ -84,12 +88,14 @@
         "appId": "com.jkc.mandi.pos",
         "productName": "JKC POS",
         "copyright": "Copyright © 2026 Jaffer Khan & Brother Company",
+        "asar": false,
         "directories": {
             "output": "dist"
         },
         "files": [
             "electron/**/*",
             "public/**/*",
+            "!public/storage",
             "app/**/*",
             "bootstrap/**/*",
             "config/**/*",
@@ -98,7 +104,8 @@
             "resources/views/**/*",
             "vendor/**/*",
             "artisan",
-            ".env"
+            ".env",
+            "!node_modules/**/*"
         ],
         "extraResources": [
             {
@@ -111,7 +118,7 @@
         ],
         "win": {
             "target": "nsis",
-            "icon": "public/favicon.ico"
+            "icon": "public/icon-256.png"
         },
         "nsis": {
             "oneClick": false,
