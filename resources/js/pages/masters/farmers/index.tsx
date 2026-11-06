@@ -229,6 +229,15 @@ export default function FarmersIndex({ farmers, areas, filters }: Props) {
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
+                                                        onClick={() => router.get(route('parties.show', { type: 'farmer', id: f.id }))}
+                                                        className="size-7 cursor-pointer text-muted-foreground hover:text-primary"
+                                                        title={t('parties.view_ledger')}
+                                                    >
+                                                        <Icon name="BookOpenTextIcon" className="size-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
                                                         onClick={() => openEditModal(f)}
                                                         className="size-7 cursor-pointer text-muted-foreground hover:text-primary"
                                                         title={t('common.edit')}

@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Masters\AreaController;
+use App\Http\Controllers\Masters\CommissionAgentController;
 use App\Http\Controllers\Masters\FarmerController;
 use App\Http\Controllers\Masters\FarmerMarkController;
 use App\Http\Controllers\Masters\ItemController;
+use App\Http\Controllers\Masters\JkcSupplierController;
 use App\Http\Controllers\Masters\MerchantController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,4 +29,12 @@ Route::middleware(['auth', 'verified'])->prefix('masters')->name('masters.')->gr
     // Areas
     Route::get('areas/search', [AreaController::class, 'search'])->name('areas.search');
     Route::resource('areas', AreaController::class)->except(['create', 'edit', 'show']);
+
+    // JKC Suppliers (vegetable suppliers - separate from the legacy POS suppliers table)
+    Route::get('suppliers/search', [JkcSupplierController::class, 'search'])->name('suppliers.search');
+    Route::resource('suppliers', JkcSupplierController::class)->except(['create', 'edit', 'show']);
+
+    // Commission Agents
+    Route::get('commission-agents/search', [CommissionAgentController::class, 'search'])->name('commission-agents.search');
+    Route::resource('commission-agents', CommissionAgentController::class)->except(['create', 'edit', 'show']);
 });

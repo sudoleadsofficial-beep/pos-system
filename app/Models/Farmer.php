@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\PartyLedgerService;
+use App\Services\PartyService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -71,6 +73,16 @@ class Farmer extends Model
                     'name_ur' => 'خود',
                 ]
             );
+        });
+
+        static::updated(function ($farmer) {
+            // Editing the opening balance used to leave current_balance
+            // stale. Recalculate it from the ledger so both agree.
+            if (! $farmer->wasChanged('opening_balance')) {
+                return;
+            }
+
+            app(PartyLedgerService::class)->recalculate(PartyService::FARMER, $farmer->id);
         });
     }
 }

@@ -13,17 +13,7 @@ class JkcMastersSeeder extends Seeder
     public function run(): void
     {
         // 1. Merchant Code 1 (Naqdi Cash Customer - Protected System Record)
-        Merchant::firstOrCreate(
-            ['code' => 1],
-            [
-                'name_en' => 'Naqdi (Cash Customer)',
-                'name_ur' => 'نقدی (عام خریدار)',
-                'phone' => '0300-0000000',
-                'opening_balance' => 0,
-                'current_balance' => 0,
-                'status' => 'active',
-            ]
-        );
+        Merchant::ensureNaqdiRecord();
 
         // Sample Merchants from Mandi
         $sampleMerchants = [
@@ -33,8 +23,33 @@ class JkcMastersSeeder extends Seeder
             ['code' => 5, 'name_en' => 'Karachi Fresh Store', 'name_ur' => 'کراچی فریش سٹور', 'phone' => '0312-9876543', 'opening_balance' => 0],
         ];
 
+        // Match the sample merchants by NAME, never by code: an existing
+        // merchant that happens to hold a sample's code must not be mistaken
+        // for that sample merchant.
+        $usedCodes = Merchant::withTrashed()->pluck('code')->map(fn ($code) => (int) $code)->all();
+        $takenCodes = [];
+
+        // A displaced sample takes a code above every code in use and above
+        // every code the sample list intends to use, so one taken code never
+        // pushes the next sample out of the way.
+        $highestCode = max(array_merge($usedCodes, array_column($sampleMerchants, 'code'), [Merchant::NAQDI_CODE]));
+
         foreach ($sampleMerchants as $m) {
-            Merchant::firstOrCreate(['code' => $m['code']], $m);
+            if (Merchant::withTrashed()->where('name_en', $m['name_en'])->exists()) {
+                continue;
+            }
+
+            $code = (int) $m['code'];
+
+            if (in_array($code, $usedCodes, true) || in_array($code, $takenCodes, true)) {
+                do {
+                    $code = ++$highestCode;
+                } while (in_array($code, $usedCodes, true) || in_array($code, $takenCodes, true));
+            }
+
+            $takenCodes[] = $code;
+
+            Merchant::create(array_merge($m, ['code' => $code]));
         }
 
         // 2. Areas

@@ -35,7 +35,7 @@ class WasooliController extends Controller
         $validated = $request->validate([
             'merchant_id' => 'required|exists:merchants,id',
             'date' => 'required|date',
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|min:0.01',
             'note' => 'nullable|string|max:255',
         ]);
 

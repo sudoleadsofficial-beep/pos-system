@@ -18,9 +18,9 @@ class MerchantController extends Controller
             $s = $request->search;
             $query->where(function ($q) use ($s) {
                 $q->where('code', 'like', "%{$s}%")
-                  ->orWhere('name_en', 'like', "%{$s}%")
-                  ->orWhere('name_ur', 'like', "%{$s}%")
-                  ->orWhere('phone', 'like', "%{$s}%");
+                    ->orWhere('name_en', 'like', "%{$s}%")
+                    ->orWhere('name_ur', 'like', "%{$s}%")
+                    ->orWhere('phone', 'like', "%{$s}%");
             });
         }
 
@@ -37,13 +37,14 @@ class MerchantController extends Controller
     public function search(Request $request)
     {
         $s = $request->get('query', '');
+
         return Merchant::query()
             ->where('status', 'active')
             ->where(function ($q) use ($s) {
-                if (!empty($s)) {
+                if (! empty($s)) {
                     $q->where('code', 'like', "%{$s}%")
-                      ->orWhere('name_en', 'like', "%{$s}%")
-                      ->orWhere('name_ur', 'like', "%{$s}%");
+                        ->orWhere('name_en', 'like', "%{$s}%")
+                        ->orWhere('name_ur', 'like', "%{$s}%");
                 }
             })
             ->orderBy('code', 'asc')
@@ -65,11 +66,12 @@ class MerchantController extends Controller
             return back()->withErrors(['name_ur' => 'At least one name (Urdu or English) is required.']);
         }
 
-        if (empty($validated['code'])) {
-            $validated['code'] = ((int) Merchant::max('code')) + 1;
+        // Code 1 is reserved for the protected Naqdi (Cash Customer) record.
+        if (isset($validated['code']) && (int) $validated['code'] === Merchant::NAQDI_CODE) {
+            return back()->withErrors(['code' => 'Code 1 is reserved for the Naqdi (Cash Customer) record.']);
         }
 
-        $validated['current_balance'] = $validated['opening_balance'] ?? 0;
+        // The code and the opening balance are filled in by the model.
         Merchant::create($validated);
 
         return back()->with('success', 'Merchant created successfully.');
@@ -88,8 +90,14 @@ class MerchantController extends Controller
             'status' => 'required|string|in:active,inactive',
         ]);
 
-        if ($merchant->isNaqdi() && (int)$validated['code'] !== 1) {
+        if ($merchant->isNaqdi() && (int) $validated['code'] !== Merchant::NAQDI_CODE) {
             return back()->withErrors(['code' => 'Cannot change code for protected Naqdi record.']);
+        }
+
+        // Code 1 is reserved for the protected Naqdi (Cash Customer) record,
+        // so no other merchant may move into it.
+        if (! $merchant->isNaqdi() && (int) $validated['code'] === Merchant::NAQDI_CODE) {
+            return back()->withErrors(['code' => 'Code 1 is reserved for the Naqdi (Cash Customer) record.']);
         }
 
         $merchant->update($validated);
@@ -105,6 +113,7 @@ class MerchantController extends Controller
                 return back()->with('error', 'Merchant code 1 (Naqdi) cannot be deleted.');
             }
             $merchant->delete();
+
             return back()->with('success', 'Merchant deleted successfully.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());

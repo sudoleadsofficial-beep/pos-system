@@ -14,16 +14,18 @@ interface Row {
     sabiqa: number;
     amroza: number;
     wasooli: number;
+    recovery: number;
     baqaya: number;
 }
 
 interface Props {
     rows: Row[];
     totals: {
-        total_sabiqa: number;
+        opening_balance: number;
         total_amroza: number;
         total_wasooli: number;
-        total_baqaya: number;
+        total_recovery: number;
+        closing_balance: number;
     };
     filters: {
         from_date: string;
@@ -116,14 +118,15 @@ export default function AmrozaWasooliCombinedReport({ rows, totals, filters }: P
                                     <th className="p-2.5 text-start w-28">{t('common.date')}</th>
                                     <th className="p-2.5 text-end w-40">{t('wasooli.sabiqa')}</th>
                                     <th className="p-2.5 text-end w-40">{t('wasooli.amroza')}</th>
-                                    <th className="p-2.5 text-end w-40">{t('wasooli.wasooli')}</th>
+                                    <th className="p-2.5 text-end w-40">{t('reports.received')}</th>
+                                    <th className="p-2.5 text-end w-32">{t('reports.recovery')}</th>
                                     <th className="p-2.5 text-end w-44">{t('wasooli.total_baqaya')}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {rows.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                                        <td colSpan={7} className="p-8 text-center text-muted-foreground">
                                             {t('common.no_records')}
                                         </td>
                                     </tr>
@@ -141,6 +144,9 @@ export default function AmrozaWasooliCombinedReport({ rows, totals, filters }: P
                                             <td className="p-2.5 text-end font-mono font-semibold text-blue-800">
                                                 {row.wasooli > 0 ? `Rs. ${Number(row.wasooli).toLocaleString()}` : '-'}
                                             </td>
+                                            <td className="p-2.5 text-end font-mono text-slate-600">
+                                                {row.recovery > 0 ? `Rs. ${Number(row.recovery).toLocaleString()}` : '-'}
+                                            </td>
                                             <td className="p-2.5 text-end font-mono font-bold text-slate-900">
                                                 Rs. {Number(row.baqaya).toLocaleString()}
                                             </td>
@@ -151,10 +157,10 @@ export default function AmrozaWasooliCombinedReport({ rows, totals, filters }: P
                             <tfoot className="bg-gray-100 font-bold border-t-2 print:bg-gray-200">
                                 <tr>
                                     <td colSpan={2} className="p-2.5 text-start font-sans">
-                                        {t('common.total')}
+                                        {t('reports.opening_and_closing')}
                                     </td>
                                     <td className="p-2.5 text-end font-mono text-sm">
-                                        Rs. {Number(totals.total_sabiqa).toLocaleString()}
+                                        Rs. {Number(totals.opening_balance).toLocaleString()}
                                     </td>
                                     <td className="p-2.5 text-end font-mono text-sm text-emerald-800">
                                         Rs. {Number(totals.total_amroza).toLocaleString()}
@@ -162,8 +168,11 @@ export default function AmrozaWasooliCombinedReport({ rows, totals, filters }: P
                                     <td className="p-2.5 text-end font-mono text-sm text-blue-800">
                                         Rs. {Number(totals.total_wasooli).toLocaleString()}
                                     </td>
+                                    <td className="p-2.5 text-end font-mono text-sm text-slate-600">
+                                        Rs. {Number(totals.total_recovery).toLocaleString()}
+                                    </td>
                                     <td className="p-2.5 text-end font-mono text-sm text-amber-800">
-                                        Rs. {Number(totals.total_baqaya).toLocaleString()}
+                                        Rs. {Number(totals.closing_balance).toLocaleString()}
                                     </td>
                                 </tr>
                             </tfoot>

@@ -48,12 +48,14 @@ class NaqdiService
             $nag = $sales->sum('nag');
             $khamBikri = round($sales->sum('gross_amount'), 2);
 
-            $receipt = MerchantReceipt::where('date', $date)
+            // Every cash receipt of this date - not just the first one.
+            $receipts = MerchantReceipt::where('date', $date)
                 ->where('merchant_id', $merchant->id)
                 ->where('type', 'same_day_cash')
-                ->first();
+                ->orderBy('id')
+                ->get();
 
-            $cashReceived = $receipt ? floatval($receipt->amount) : 0;
+            $cashReceived = round((float) $receipts->sum('amount'), 2);
             $baqaya = round($khamBikri - $cashReceived, 2);
 
             $rows[] = [
@@ -65,7 +67,14 @@ class NaqdiService
                 'total_nag' => $nag,
                 'kham_bikri' => $khamBikri,
                 'naqdi_wasooli' => $cashReceived,
-                'receipt_id' => $receipt ? $receipt->id : null,
+                'receipts_total' => $cashReceived,
+                'receipt_id' => $receipts->first()?->id,
+                'receipts' => $receipts->map(fn ($receipt) => [
+                    'id' => $receipt->id,
+                    'type' => $receipt->type,
+                    'amount' => (float) $receipt->amount,
+                    'note' => $receipt->note,
+                ])->values()->all(),
                 'total_baqaya' => $baqaya,
             ];
 
@@ -87,22 +96,21 @@ class NaqdiService
     }
 
     /**
-     * Save/update cash receipt for a merchant on date
+     * Save a cash receipt for a merchant on a date.
+     *
+     * Every payment is its own row: a merchant may pay more than once on the
+     * same day and an earlier payment is never overwritten.
      */
     public function saveNaqdiReceipt(int $merchantId, string $date, float $amount): MerchantReceipt
     {
         return DB::transaction(function () use ($merchantId, $date, $amount) {
-            $receipt = MerchantReceipt::updateOrCreate(
-                [
-                    'merchant_id' => $merchantId,
-                    'date' => $date,
-                    'type' => 'same_day_cash',
-                ],
-                [
-                    'amount' => $amount,
-                    'created_by' => auth()->id(),
-                ]
-            );
+            $receipt = MerchantReceipt::create([
+                'merchant_id' => $merchantId,
+                'date' => $date,
+                'type' => 'same_day_cash',
+                'amount' => $amount,
+                'created_by' => auth()->id(),
+            ]);
 
             // Update merchant balance
             app(AmrozaService::class)->recalculateMerchantBalance($merchantId);

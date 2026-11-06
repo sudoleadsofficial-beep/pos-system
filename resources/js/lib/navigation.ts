@@ -170,14 +170,40 @@ export const jkcSidebarNav: NavGroup[] = [
                 url: "/masters/areas",
                 icon: "MapPinIcon",
             },
+            {
+                title: "nav.suppliers",
+                url: "/masters/suppliers",
+                icon: "HandshakeIcon",
+            },
+            {
+                title: "nav.commission_agents",
+                url: "/masters/commission-agents",
+                icon: "ScalesIcon",
+            },
         ],
         includeRoutes: [
             "merchants",
             "farmers",
             "marks",
             "items",
-            "areas"
+            "areas",
+            "suppliers",
+            "commission-agents"
         ]
+    },
+    {
+        id: "parties",
+        title: "nav.parties",
+        icon: "UsersThreeIcon",
+        isGroup: true,
+        items: [
+            {
+                title: "nav.parties",
+                url: "/parties",
+                icon: "UsersThreeIcon",
+            },
+        ],
+        includeRoutes: ["parties"]
     },
     {
         id: "reports",

@@ -33,17 +33,35 @@ class DashboardService
         $cashSale = 0;
         $creditSale = 0;
 
+        // Cash sales per merchant (a sale settled in cash).
+        $cashSalesByMerchant = [];
+
         foreach ($todaysSales as $sale) {
             $isCash = $sale->payment_type === 'naqdi' || ($sale->merchant && (int)$sale->merchant->code === 1);
             if ($isCash) {
-                $cashSale += $sale->gross_amount;
+                $merchantId = (int) $sale->merchant_id;
+                $cashSalesByMerchant[$merchantId] = ($cashSalesByMerchant[$merchantId] ?? 0) + (float) $sale->gross_amount;
+                $cashSale += (float) $sale->gross_amount;
             } else {
-                $creditSale += $sale->gross_amount;
+                $creditSale += (float) $sale->gross_amount;
             }
         }
 
-        // Today's recoveries
-        $received = MerchantReceipt::where('date', $today)->sum('amount');
+        // Today's receipts, per merchant and split by kind.
+        $sameDayCashByMerchant = [];
+        $recoveryTotal = 0;
+
+        foreach (MerchantReceipt::where('date', $today)->get() as $receipt) {
+            if ($receipt->type === 'same_day_cash') {
+                $merchantId = (int) $receipt->merchant_id;
+                $sameDayCashByMerchant[$merchantId] = ($sameDayCashByMerchant[$merchantId] ?? 0) + (float) $receipt->amount;
+            } else {
+                $recoveryTotal += (float) $receipt->amount;
+            }
+        }
+
+        // Total received today (both kinds).
+        $received = array_sum($sameDayCashByMerchant) + $recoveryTotal;
 
         // Total merchant balance outstanding
         $merchantsBalance = Merchant::where('status', 'active')->sum('current_balance');
@@ -51,8 +69,26 @@ class DashboardService
         // Total farmer balance outstanding
         $farmersBalance = Farmer::where('status', 'active')->sum('current_balance');
 
-        // Estimated cash in hand: Today's cash sale + Today's recoveries
-        $cashInHand = $cashSale + $received;
+        // Estimated cash in hand: the cash that actually arrived today.
+        //
+        // A 'same_day_cash' receipt is normally the settlement record of that
+        // merchant's cash sales - the same money recorded twice (once as the
+        // sale, once as the receipt). But a merchant may also pay something
+        // extra on top, or pay cash against a credit sale, so the two are
+        // matched by AMOUNT, per merchant: the smaller side is the mirrored
+        // part, the larger side is the cash that really came in.
+        //
+        // cash received = cash sales + all receipts - the mirrored overlap
+        //             = SUM_merchants max(cashSales, sameDayCash) + recoveries
+        $mirrored = 0;
+        foreach (array_unique(array_merge(array_keys($cashSalesByMerchant), array_keys($sameDayCashByMerchant))) as $merchantId) {
+            $mirrored += min(
+                $cashSalesByMerchant[$merchantId] ?? 0,
+                $sameDayCashByMerchant[$merchantId] ?? 0
+            );
+        }
+
+        $cashInHand = $cashSale + $received - $mirrored;
 
         return [
             'todaysSale' => round($todaysSaleTotal, 2),

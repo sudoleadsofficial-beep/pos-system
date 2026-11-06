@@ -227,10 +227,9 @@ class MerchantReportController extends Controller
         );
 
         $rows = [];
-        $totalSabiqa = 0;
         $totalAmroza = 0;
         $totalWasooli = 0;
-        $totalBaqaya = 0;
+        $totalRecovery = 0;
 
         $merchants = Merchant::all();
         $totalOpening = $merchants->sum('opening_balance');
@@ -239,17 +238,22 @@ class MerchantReportController extends Controller
             $dateStr = $dt->format('Y-m-d');
 
             // Prior sales and receipts before this date across all merchants
-            $priorSales = AmrozaSale::where('date', '<', $dateStr)->sum('gross_amount');
+            $priorSales    = AmrozaSale::where('date', '<', $dateStr)->sum('gross_amount');
             $priorReceipts = MerchantReceipt::where('date', '<', $dateStr)->sum('amount');
             $sabiqa = round($totalOpening + $priorSales - $priorReceipts, 2);
 
             // Day sales (Amroza)
             $amroza = round(AmrozaSale::where('date', $dateStr)->sum('gross_amount'), 2);
 
-            // Day receipts (Wasooli)
-            $wasooli = round(MerchantReceipt::where('date', $dateStr)->where('type', 'recovery')->sum('amount'), 2);
+            // Day receipts - every kind, so Baqaya is the merchant's true
+            // outstanding balance as at this date. Sabiqa already subtracted
+            // every earlier receipt, so only this date's receipts are deducted.
+            $wasooli = round(MerchantReceipt::where('date', $dateStr)->sum('amount'), 2);
 
-            // Total Baqaya = Sabiqa + Amroza - Wasooli
+            // The recovery part of that, shown separately for clarity.
+            $recovery = round(MerchantReceipt::where('date', $dateStr)->where('type', 'recovery')->sum('amount'), 2);
+
+            // Total Baqaya = Sabiqa + Amroza - receipts of this date
             $baqaya = round($sabiqa + $amroza - $wasooli, 2);
 
             $rows[] = [
@@ -257,22 +261,29 @@ class MerchantReportController extends Controller
                 'sabiqa' => $sabiqa,
                 'amroza' => $amroza,
                 'wasooli' => $wasooli,
+                'recovery' => $recovery,
                 'baqaya' => $baqaya,
             ];
 
-            $totalSabiqa += $sabiqa;
             $totalAmroza += $amroza;
             $totalWasooli += $wasooli;
-            $totalBaqaya += $baqaya;
+            $totalRecovery += $recovery;
         }
+
+        // Opening balance of the period and closing balance at to_date.
+        // Summing the daily running balances would mean nothing, so the
+        // footer shows the first row's Sabiqa and the last row's Baqaya.
+        $openingBalance = $rows ? $rows[0]['sabiqa'] : 0;
+        $closingBalance = $rows ? $rows[count($rows) - 1]['baqaya'] : 0;
 
         return Inertia::render('merchants/reports/amroza-wasooli', [
             'rows' => $rows,
             'totals' => [
-                'total_sabiqa' => round($totalSabiqa, 2),
+                'opening_balance' => round($openingBalance, 2),
                 'total_amroza' => round($totalAmroza, 2),
                 'total_wasooli' => round($totalWasooli, 2),
-                'total_baqaya' => round($totalBaqaya, 2),
+                'total_recovery' => round($totalRecovery, 2),
+                'closing_balance' => round($closingBalance, 2),
             ],
             'filters' => [
                 'from_date' => $fromDate,

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Merchants\AmrozaController;
+use App\Http\Controllers\Merchants\MerchantReceiptController;
 use App\Http\Controllers\Merchants\MerchantReportController;
 use App\Http\Controllers\Merchants\NaqdiController;
 use App\Http\Controllers\Merchants\WasooliController;
@@ -34,6 +35,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Wasooli (Recovery)
         Route::get('wasooli', [WasooliController::class, 'index'])->name('wasooli.index');
         Route::post('wasooli', [WasooliController::class, 'store'])->name('wasooli.store');
+
+        // Receipt editing / deletion (shared by Naqdi and Wasooli receipts)
+        Route::put('receipts/{receipt}', [MerchantReceiptController::class, 'update'])->name('receipts.update');
+        Route::delete('receipts/{receipt}', [MerchantReceiptController::class, 'destroy'])->name('receipts.destroy');
 
         // Reports with /merchants prefix as well
         Route::get('merchant-amroza', [MerchantReportController::class, 'merchantAmroza'])->name('merchant_amroza');

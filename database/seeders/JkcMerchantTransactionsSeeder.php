@@ -14,12 +14,14 @@ class JkcMerchantTransactionsSeeder extends Seeder
     {
         $today = date('Y-m-d');
 
-        // Fetch seed merchants
-        $naqdi = Merchant::where('code', 1)->first(); // Naqdi
-        $tariq = Merchant::where('code', 2)->first(); // Haji Tariq
-        $ismail = Merchant::where('code', 3)->first(); // Ismail Bhai
-        $aslam = Merchant::where('code', 4)->first(); // Aslam Sabzi Farosh
-        $farhan = Merchant::where('code', 5)->first(); // Farhan Brothers
+        // Fetch seed merchants BY NAME, never by code: an existing merchant that
+        // happens to hold one of these codes must not be mistaken for the
+        // merchant this seeder means.
+        $naqdi = Merchant::where('name_en', Merchant::NAQDI_NAME_EN)->first();
+        $tariq = Merchant::where('name_en', 'Haji Tariq')->first();
+        $ismail = Merchant::where('name_en', 'Ismail Bhai')->first();
+        $aslam = Merchant::where('name_en', 'Aslam Sabzi Farosh')->first();
+        $farhan = Merchant::where('name_en', 'Farhan Brothers')->first();
 
         // Fetch seed items
         $potato = Item::where('name_en', 'Potato')->first() ?? Item::first();
@@ -81,8 +83,12 @@ class JkcMerchantTransactionsSeeder extends Seeder
 
             // Aslam Sabzi Farosh: Amroza 8,500 (part of brief example: 16100 + 8500 - 8000 = 16600)
             if ($aslam) {
-                // Sabiqa will be opening_balance
-                $aslam->update(['opening_balance' => 16100]);
+                // Sabiqa will be opening_balance. Only set it when the
+                // merchant has no opening balance yet, so an existing
+                // merchant's own opening balance is never overwritten.
+                if ((float) $aslam->opening_balance === 0.0) {
+                    $aslam->update(['opening_balance' => 16100]);
+                }
 
                 AmrozaSale::create([
                     'date' => $today,

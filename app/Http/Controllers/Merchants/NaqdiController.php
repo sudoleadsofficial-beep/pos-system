@@ -32,7 +32,7 @@ class NaqdiController extends Controller
         $validated = $request->validate([
             'merchant_id' => 'required|exists:merchants,id',
             'date' => 'required|date',
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|min:0.01',
         ]);
 
         $this->naqdiService->saveNaqdiReceipt(

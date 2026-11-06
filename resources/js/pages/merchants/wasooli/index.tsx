@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
@@ -8,6 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+
+interface Receipt {
+    id: number;
+    type: string;
+    amount: number;
+    note: string | null;
+}
 
 interface WasooliRow {
     merchant_id: number;
@@ -19,6 +26,9 @@ interface WasooliRow {
     sabiqa: number;
     amroza: number;
     wasooli: number;
+    same_day_cash: number;
+    receipts_total: number;
+    receipts: Receipt[];
     receipt_id?: number | null;
     total_baqaya: number;
 }
@@ -27,6 +37,7 @@ interface Totals {
     total_sabiqa: number;
     total_amroza: number;
     total_wasooli: number;
+    total_receipts: number;
     total_baqaya: number;
 }
 
@@ -47,16 +58,33 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
     const [searchFilter, setSearchFilter] = useState(filters.search || '');
     const [selectedRowIndex, setSelectedRowIndex] = useState<number>(rows.length > 0 ? 0 : -1);
 
-    // Track input edits for Wasooli amount
-    const [editedAmounts, setEditedAmounts] = useState<Record<number, string>>(() => {
-        const initial: Record<number, string> = {};
-        rows.forEach(r => {
-            initial[r.merchant_id] = r.wasooli > 0 ? String(r.wasooli) : '';
-        });
-        return initial;
-    });
+    // Amount and note typed for a NEW receipt. Always starts empty: every
+    // payment is its own row, so the box must never hold an earlier
+    // payment's amount.
+    const [editedAmounts, setEditedAmounts] = useState<Record<number, string>>({});
+    const [editedNotes, setEditedNotes] = useState<Record<number, string>>({});
+
+    // The receipt currently being edited, if any.
+    const [editingReceipt, setEditingReceipt] = useState<{ merchantId: number; receipt: Receipt } | null>(null);
 
     const [savingId, setSavingId] = useState<number | null>(null);
+
+    // Re-seed the inputs whenever the date or the rows change, so an amount
+    // typed for one date can never be written into another date.
+    useEffect(() => {
+        const initial: Record<number, string> = {};
+        const initialNotes: Record<number, string> = {};
+
+        rows.forEach(r => {
+            initial[r.merchant_id] = '';
+            initialNotes[r.merchant_id] = '';
+        });
+
+        setEditedAmounts(initial);
+        setEditedNotes(initialNotes);
+        setEditingReceipt(null);
+        setSelectedRowIndex(rows.length > 0 ? 0 : -1);
+    }, [filters.date, rows]);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: t('nav.merchant_side'), href: '#' },
@@ -80,14 +108,45 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
         }));
     }
 
+    function handleNoteChange(merchantId: number, val: string) {
+        setEditedNotes(prev => ({
+            ...prev,
+            [merchantId]: val,
+        }));
+    }
+
+    function startEdit(merchantId: number, receipt: Receipt) {
+        setEditingReceipt({ merchantId, receipt });
+        setEditedAmounts(prev => ({ ...prev, [merchantId]: String(receipt.amount) }));
+        setEditedNotes(prev => ({ ...prev, [merchantId]: receipt.note || '' }));
+    }
+
+    function cancelEdit() {
+        if (editingReceipt) {
+            const merchantId = editingReceipt.merchantId;
+            setEditedAmounts(prev => ({ ...prev, [merchantId]: '' }));
+            setEditedNotes(prev => ({ ...prev, [merchantId]: '' }));
+        }
+
+        setEditingReceipt(null);
+    }
+
+    // Save a NEW recovery receipt. An earlier payment is never overwritten.
     function saveWasooliReceipt(merchantId: number) {
-        const amount = parseFloat(editedAmounts[merchantId]) || 0;
+        const amount = parseFloat(editedAmounts[merchantId]);
+
+        if (!amount || amount <= 0) {
+            toast.error(t('common.enter_amount'));
+            return;
+        }
+
         setSavingId(merchantId);
 
         router.post('/merchants/wasooli', {
             merchant_id: merchantId,
             date: selectedDate,
             amount: amount,
+            note: editedNotes[merchantId] || null,
         }, {
             preserveScroll: true,
             onSuccess: () => {
@@ -98,6 +157,52 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
                 toast.error(t('common.error'));
                 setSavingId(null);
             },
+        });
+    }
+
+    // Save an EDIT of an existing receipt.
+    function saveReceiptEdit(merchantId: number) {
+        if (!editingReceipt) {
+            return;
+        }
+
+        const amount = parseFloat(editedAmounts[merchantId]);
+
+        if (!amount || amount <= 0) {
+            toast.error(t('common.enter_amount'));
+            return;
+        }
+
+        setSavingId(merchantId);
+
+        router.put(route('merchants.receipts.update', editingReceipt.receipt.id), {
+            amount: amount,
+            date: selectedDate,
+            merchant_id: merchantId,
+            note: editedNotes[merchantId] || null,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success(t('common.saved'));
+                setSavingId(null);
+                setEditingReceipt(null);
+            },
+            onError: () => {
+                toast.error(t('common.error'));
+                setSavingId(null);
+            },
+        });
+    }
+
+    function removeReceipt(receipt: Receipt) {
+        if (!confirm(t('common.confirm_delete'))) {
+            return;
+        }
+
+        router.delete(route('merchants.receipts.destroy', receipt.id), {
+            preserveScroll: true,
+            onSuccess: () => toast.success(t('common.saved')),
+            onError: () => toast.error(t('common.error')),
         });
     }
 
@@ -225,7 +330,7 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
                                 <th className="p-2.5 text-start">{t('merchants.merchant')}</th>
                                 <th className="p-2.5 text-end w-32">{t('wasooli.sabiqa')}</th>
                                 <th className="p-2.5 text-end w-32">{t('wasooli.amroza')}</th>
-                                <th className="p-2.5 text-end w-44">{t('wasooli.wasooli')} ({t('common.save')})</th>
+                                <th className="p-2.5 text-end w-56">{t('wasooli.wasooli')} ({t('common.save')})</th>
                                 <th className="p-2.5 text-end w-36">{t('wasooli.total_baqaya')}</th>
                             </tr>
                         </thead>
@@ -239,12 +344,23 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
                             ) : (
                                 rows.map((row, idx) => {
                                     const isSelected = selectedRowIndex === idx;
-                                    const currentInputVal = editedAmounts[row.merchant_id] ?? (row.wasooli > 0 ? String(row.wasooli) : '');
-                                    const currentNumVal = parseFloat(currentInputVal) || 0;
+                                    const isEditing = editingReceipt?.merchantId === row.merchant_id;
 
-                                    // Total Baqaya = Sabiqa + Amroza - Wasooli
-                                    // Example: 16100 + 8500 - 8000 = 16600
-                                    const liveBaqaya = Math.round((row.sabiqa + row.amroza - currentNumVal) * 100) / 100;
+                                    const currentInputVal = editedAmounts[row.merchant_id] ?? '';
+                                    const currentNoteVal = editedNotes[row.merchant_id] ?? '';
+
+                                    // While editing, the amount in the box replaces the
+                                    // receipt's own amount, so the original is taken out
+                                    // of the running total first.
+                                    const originalAmount = isEditing ? Number(editingReceipt.receipt.amount) : 0;
+                                    const pendingAmount = parseFloat(currentInputVal) || 0;
+
+                                    // Total Baqaya = Sabiqa + Amroza - every receipt of this date
+                                    const liveBaqaya =
+                                        Math.round(
+                                            (row.sabiqa + row.amroza - (row.receipts_total - originalAmount + pendingAmount)) *
+                                                100
+                                        ) / 100;
 
                                     return (
                                         <tr
@@ -270,30 +386,117 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
                                                 {row.amroza > 0 ? `Rs. ${Number(row.amroza).toLocaleString()}` : '-'}
                                             </td>
                                             <td className="p-2 text-end">
-                                                <div className="flex items-center justify-end gap-1">
+                                                <div className="flex flex-col items-end gap-1">
+                                                    {/* Receipts already recorded for this date */}
+                                                    {(row.receipts || []).map(receipt => (
+                                                        <div
+                                                            key={receipt.id}
+                                                            className="flex items-center gap-1 text-[11px] font-normal"
+                                                        >
+                                                            <span className="font-mono font-semibold">
+                                                                Rs. {Number(receipt.amount).toLocaleString()}
+                                                            </span>
+                                                            <span className="px-1 rounded bg-muted text-muted-foreground">
+                                                                {receipt.type === 'same_day_cash'
+                                                                    ? t('amroza.naqdi')
+                                                                    : t('wasooli.wasooli')}
+                                                            </span>
+                                                            {receipt.note && (
+                                                                <span className="text-muted-foreground">{receipt.note}</span>
+                                                            )}
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="size-6 cursor-pointer text-muted-foreground hover:text-primary"
+                                                                onClick={e => {
+                                                                    e.stopPropagation();
+                                                                    startEdit(row.merchant_id, receipt);
+                                                                }}
+                                                                title={t('common.edit')}
+                                                            >
+                                                                <Icon name="PencilSimpleIcon" className="w-3 h-3" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="size-6 cursor-pointer text-muted-foreground hover:text-destructive"
+                                                                onClick={e => {
+                                                                    e.stopPropagation();
+                                                                    removeReceipt(receipt);
+                                                                }}
+                                                                title={t('common.delete')}
+                                                            >
+                                                                <Icon name="TrashIcon" className="w-3 h-3" />
+                                                            </Button>
+                                                        </div>
+                                                    ))}
+
+                                                    {/* Add a new receipt, or edit the one in progress */}
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <Input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            value={currentInputVal}
+                                                            onChange={e => handleAmountChange(row.merchant_id, e.target.value)}
+                                                            onKeyDown={e => {
+                                                                if (e.key === 'Enter') {
+                                                                    e.preventDefault();
+                                                                    isEditing ? saveReceiptEdit(row.merchant_id) : saveWasooliReceipt(row.merchant_id);
+                                                                }
+                                                            }}
+                                                            className="h-8 w-28 text-end font-mono text-xs font-semibold"
+                                                            placeholder="0.00"
+                                                        />
+                                                        {isEditing ? (
+                                                            <Button
+                                                                size="sm"
+                                                                className="h-8 px-2 bg-blue-700 hover:bg-blue-800 text-white"
+                                                                disabled={savingId === row.merchant_id}
+                                                                onClick={e => {
+                                                                    e.stopPropagation();
+                                                                    saveReceiptEdit(row.merchant_id);
+                                                                }}
+                                                                title={t('common.save')}
+                                                            >
+                                                                <Icon name="Check" className="w-3.5 h-3.5" />
+                                                            </Button>
+                                                        ) : (
+                                                            <Button
+                                                                size="sm"
+                                                                className="h-8 px-2 bg-blue-700 hover:bg-blue-800 text-white"
+                                                                disabled={savingId === row.merchant_id}
+                                                                onClick={e => {
+                                                                    e.stopPropagation();
+                                                                    saveWasooliReceipt(row.merchant_id);
+                                                                }}
+                                                                title={t('common.add')}
+                                                            >
+                                                                <Icon name="Check" className="w-3.5 h-3.5" />
+                                                            </Button>
+                                                        )}
+                                                        {isEditing && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className="h-8 px-1 cursor-pointer text-muted-foreground"
+                                                                onClick={e => {
+                                                                    e.stopPropagation();
+                                                                    cancelEdit();
+                                                                }}
+                                                                title={t('common.cancel')}
+                                                            >
+                                                                <Icon name="X" className="w-3.5 h-3.5" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+
                                                     <Input
-                                                        type="number"
-                                                        step="0.01"
-                                                        min="0"
-                                                        value={currentInputVal}
-                                                        onChange={e => handleAmountChange(row.merchant_id, e.target.value)}
-                                                        onKeyDown={e => {
-                                                            if (e.key === 'Enter') {
-                                                                e.preventDefault();
-                                                                saveWasooliReceipt(row.merchant_id);
-                                                            }
-                                                        }}
-                                                        className="h-8 w-28 text-end font-mono text-xs font-semibold"
-                                                        placeholder="0.00"
+                                                        value={currentNoteVal}
+                                                        onChange={e => handleNoteChange(row.merchant_id, e.target.value)}
+                                                        placeholder={t('common.note')}
+                                                        className="h-6 w-40 text-[10px] text-start"
                                                     />
-                                                    <Button
-                                                        size="sm"
-                                                        className="h-8 px-2 bg-blue-700 hover:bg-blue-800 text-white"
-                                                        disabled={savingId === row.merchant_id}
-                                                        onClick={() => saveWasooliReceipt(row.merchant_id)}
-                                                    >
-                                                        <Icon name="Check" className="w-3.5 h-3.5" />
-                                                    </Button>
                                                 </div>
                                             </td>
                                             <td className={`p-2.5 text-end font-mono font-bold ${
