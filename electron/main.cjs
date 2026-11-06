@@ -25,13 +25,44 @@ function checkServer(timeoutMs = 1000) {
     });
 }
 
-// Find PHP executable
-function getPhpBinary() {
+// Find PHP executable (bundled portable PHP first, then local, then XAMPP)
+function getPhpBinaryInfo() {
+    // 1. Packaged production location (process.resourcesPath)
+    if (app.isPackaged) {
+        const packagedPhp = path.join(process.resourcesPath, 'php-win', 'php.exe');
+        const packagedIni = path.join(process.resourcesPath, 'php-win', 'php.ini');
+        if (fs.existsSync(packagedPhp)) {
+            return { binary: packagedPhp, ini: packagedIni };
+        }
+    }
+
+    // 2. Local development portable PHP
+    const localPhp = path.join(__dirname, '..', 'php-win', 'php.exe');
+    const localIni = path.join(__dirname, '..', 'php-win', 'php.ini');
+    if (fs.existsSync(localPhp)) {
+        return { binary: localPhp, ini: localIni };
+    }
+
+    // 3. XAMPP fallback
     const xamppPhp = 'C:\\xampp\\php\\php.exe';
     if (fs.existsSync(xamppPhp)) {
-        return xamppPhp;
+        return { binary: xamppPhp, ini: null };
     }
-    return 'php'; // Fallback to system PATH
+
+    // 4. System PATH
+    return { binary: 'php', ini: null };
+}
+
+function getAppRoot() {
+    if (app.isPackaged) {
+        // In electron-builder, extraResources or unpacked app directory
+        const unpackedApp = path.join(process.resourcesPath, 'app');
+        if (fs.existsSync(unpackedApp)) {
+            return unpackedApp;
+        }
+        return process.resourcesPath;
+    }
+    return path.join(__dirname, '..');
 }
 
 // Start PHP artisan serve silently
@@ -43,10 +74,19 @@ async function ensureServerRunning() {
     }
 
     console.log('[JKC Desktop] Starting local PHP server...');
-    const phpBinary = getPhpBinary();
-    const appRoot = path.join(__dirname, '..');
+    const phpInfo = getPhpBinaryInfo();
+    const appRoot = getAppRoot();
 
-    phpProcess = spawn(phpBinary, ['artisan', 'serve', `--host=${HOST}`, `--port=${PORT}`], {
+    console.log('[JKC Desktop] Using PHP binary:', phpInfo.binary);
+    console.log('[JKC Desktop] App root directory:', appRoot);
+
+    const args = [];
+    if (phpInfo.ini && fs.existsSync(phpInfo.ini)) {
+        args.push('-c', phpInfo.ini);
+    }
+    args.push('artisan', 'serve', `--host=${HOST}`, `--port=${PORT}`);
+
+    phpProcess = spawn(phpInfo.binary, args, {
         cwd: appRoot,
         stdio: 'ignore',
         windowsHide: true,

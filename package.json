@@ -4,6 +4,7 @@
     "main": "./electron/main.cjs",
     "scripts": {
         "desktop": "electron ./electron/main.cjs",
+        "build:exe": "vite build && electron-builder --win",
         "build": "vite build",
         "build:ssr": "vite build && vite build --ssr",
         "dev": "vite",
@@ -16,6 +17,7 @@
         "@eslint/js": "^9.19.0",
         "@types/node": "^22.13.5",
         "electron": "^45.2.3",
+        "electron-builder": "^26.18.0",
         "eslint": "^9.17.0",
         "eslint-config-prettier": "^10.0.1",
         "eslint-plugin-react": "^7.37.3",
@@ -77,5 +79,47 @@
         "@rollup/rollup-linux-x64-gnu": "4.9.5",
         "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",
         "lightningcss-linux-x64-gnu": "^1.29.1"
+    },
+    "build": {
+        "appId": "com.jkc.mandi.pos",
+        "productName": "JKC POS",
+        "copyright": "Copyright © 2026 Jaffer Khan & Brother Company",
+        "directories": {
+            "output": "dist"
+        },
+        "files": [
+            "electron/**/*",
+            "public/**/*",
+            "app/**/*",
+            "bootstrap/**/*",
+            "config/**/*",
+            "database/**/*",
+            "routes/**/*",
+            "resources/views/**/*",
+            "vendor/**/*",
+            "artisan",
+            ".env"
+        ],
+        "extraResources": [
+            {
+                "from": "php-win",
+                "to": "php-win",
+                "filter": [
+                    "**/*"
+                ]
+            }
+        ],
+        "win": {
+            "target": "nsis",
+            "icon": "public/favicon.ico"
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true,
+            "shortcutName": "JKC POS",
+            "runAfterFinish": true
+        }
     }
 }
