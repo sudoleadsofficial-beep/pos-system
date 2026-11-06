@@ -80,11 +80,16 @@ async function ensureServerRunning() {
     console.log('[JKC Desktop] Using PHP binary:', phpInfo.binary);
     console.log('[JKC Desktop] App root directory:', appRoot);
 
+    const serverScript = path.join(appRoot, 'server.php');
     const args = [];
     if (phpInfo.ini && fs.existsSync(phpInfo.ini)) {
         args.push('-c', phpInfo.ini);
     }
-    args.push('artisan', 'serve', `--host=${HOST}`, `--port=${PORT}`);
+    if (fs.existsSync(serverScript)) {
+        args.push('-S', `${HOST}:${PORT}`, 'server.php');
+    } else {
+        args.push('artisan', 'serve', `--host=${HOST}`, `--port=${PORT}`);
+    }
 
     phpProcess = spawn(phpInfo.binary, args, {
         cwd: appRoot,
@@ -144,7 +149,7 @@ function createMainWindow() {
         height: 850,
         minWidth: 1024,
         minHeight: 700,
-        title: 'JKC - Vegetable Commission Agent System',
+        title: 'JKC POS - Vegetable Commission Agent System',
         icon: fs.existsSync(iconPath) ? iconPath : undefined,
         autoHideMenuBar: true,
         backgroundColor: '#ffffff',

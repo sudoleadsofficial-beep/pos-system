@@ -104,6 +104,7 @@
             "resources/views/**/*",
             "vendor/**/*",
             "artisan",
+            "server.php",
             ".env",
             "!node_modules/**/*"
         ],
