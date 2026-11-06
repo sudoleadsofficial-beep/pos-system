@@ -9,7 +9,7 @@ let splashWindow = null;
 let phpProcess = null;
 const PORT = 8000;
 const HOST = '127.0.0.1';
-const START_URL = `http://${HOST}:${PORT}/amroza`;
+const START_URL = `http://${HOST}:${PORT}/login`;
 
 // Check if port 8000 is already active
 function checkServer(timeoutMs = 1000) {
@@ -65,8 +65,35 @@ function getAppRoot() {
     return path.join(__dirname, '..');
 }
 
+function ensureStorageDirectories(appRoot) {
+    const dirs = [
+        path.join(appRoot, 'storage'),
+        path.join(appRoot, 'storage', 'app'),
+        path.join(appRoot, 'storage', 'app', 'public'),
+        path.join(appRoot, 'storage', 'framework'),
+        path.join(appRoot, 'storage', 'framework', 'views'),
+        path.join(appRoot, 'storage', 'framework', 'cache'),
+        path.join(appRoot, 'storage', 'framework', 'cache', 'data'),
+        path.join(appRoot, 'storage', 'framework', 'sessions'),
+        path.join(appRoot, 'storage', 'logs'),
+        path.join(appRoot, 'bootstrap', 'cache'),
+    ];
+    for (const d of dirs) {
+        if (!fs.existsSync(d)) {
+            try {
+                fs.mkdirSync(d, { recursive: true });
+            } catch (err) {
+                console.error('[JKC Desktop] Failed to create dir:', d, err);
+            }
+        }
+    }
+}
+
 // Start PHP artisan serve silently
 async function ensureServerRunning() {
+    const appRoot = getAppRoot();
+    ensureStorageDirectories(appRoot);
+
     const isRunning = await checkServer();
     if (isRunning) {
         console.log('[JKC Desktop] PHP server is already running on port ' + PORT);
@@ -75,7 +102,6 @@ async function ensureServerRunning() {
 
     console.log('[JKC Desktop] Starting local PHP server...');
     const phpInfo = getPhpBinaryInfo();
-    const appRoot = getAppRoot();
 
     console.log('[JKC Desktop] Using PHP binary:', phpInfo.binary);
     console.log('[JKC Desktop] App root directory:', appRoot);
