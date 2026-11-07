@@ -31,7 +31,7 @@ interface Props {
     entry?: LedgerEntry | null;
 }
 
-const CATEGORIES = ['payment', 'advance', 'consignment', 'commission', 'adjustment', 'other'];
+const CATEGORIES = ['payment', 'advance', 'consignment', 'purchase', 'commission', 'adjustment', 'other'];
 
 export default function LedgerEntryDialog({ open, onOpenChange, partyType, partyId, entry }: Props) {
     const { t, i18n } = useTranslation();

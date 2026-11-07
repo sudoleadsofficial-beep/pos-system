@@ -305,7 +305,11 @@ class PartyLedgerService
         $query = PartyLedgerEntry::query()->forParty($type, $partyId);
 
         if ($upTo !== null) {
-            $query->where('date', '<=', $upTo);
+            // whereDate() compares the DATE part only. A plain string compare
+            // would miss rows whose date was written with a time component
+            // ('2026-11-06 00:00:00' > '2026-11-06'), which is why the
+            // historical rows are counted with this filter.
+            $query->whereDate('date', '<=', $upTo);
         }
 
         $jama = 0.0;

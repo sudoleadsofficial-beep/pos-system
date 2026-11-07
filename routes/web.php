@@ -44,4 +44,5 @@ require __DIR__ . '/parties.php';
 require __DIR__ . '/settings.php';
 require __DIR__ . '/system.php';
 require __DIR__ . '/farmers.php';
+require __DIR__ . '/supplier_purchases.php';
 require __DIR__ . '/users.php';

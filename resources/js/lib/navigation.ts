@@ -103,6 +103,29 @@ export const jkcSidebarNav: NavGroup[] = [
         ]
     },
     {
+        id: "suppliers",
+        title: "nav.supplier_side",
+        icon: "TruckIcon",
+        isGroup: true,
+        items: [
+            {
+                title: "nav.supplier_purchases",
+                url: "/supplier-purchases",
+                icon: "TruckIcon",
+            },
+            {
+                title: "nav.supplier_reports",
+                url: "/supplier-reports",
+                icon: "ChartBarIcon",
+            },
+        ],
+        includeRoutes: [
+            "suppliers.purchases",
+            "suppliers.payments",
+            "suppliers.reports"
+        ]
+    },
+    {
         id: "cash_book",
         title: "nav.cash_book",
         icon: "BookBookmarkIcon",

@@ -28,7 +28,7 @@ class PartyLedgerEntryController extends Controller
             'date' => 'required|date',
             'direction' => 'required|in:'.PartyLedgerEntry::DIRECTION_JAMA.','.PartyLedgerEntry::DIRECTION_BANAM,
             'amount' => 'required|numeric|min:0.01',
-            'category' => 'required|in:payment,advance,consignment,commission,adjustment,other',
+            'category' => 'required|in:payment,advance,consignment,purchase,commission,adjustment,other',
             'description' => 'nullable|string|max:255',
             'reference' => 'nullable|string|max:255',
         ]);
@@ -49,7 +49,7 @@ class PartyLedgerEntryController extends Controller
             'date' => 'required|date',
             'direction' => 'required|in:'.PartyLedgerEntry::DIRECTION_JAMA.','.PartyLedgerEntry::DIRECTION_BANAM,
             'amount' => 'required|numeric|min:0.01',
-            'category' => 'required|in:payment,advance,consignment,commission,adjustment,other',
+            'category' => 'required|in:payment,advance,consignment,purchase,commission,adjustment,other',
             'description' => 'nullable|string|max:255',
             'reference' => 'nullable|string|max:255',
         ]);

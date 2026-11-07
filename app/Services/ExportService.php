@@ -11,6 +11,7 @@ use App\Models\JkcSupplier;
 use App\Models\Merchant;
 use App\Models\MerchantReceipt;
 use App\Models\Purchase;
+use App\Models\SupplierPurchase;
 use App\Support\Xlsx;
 use App\Support\Zip;
 use Dompdf\Dompdf;
@@ -67,6 +68,11 @@ class ExportService
             $categories['farmer_purchases'] = 'Farmer Purchases';
         }
 
+        // The supplier purchase register (materials, packaging and services).
+        if ($this->tableExists('supplier_purchases')) {
+            $categories['supplier_purchases'] = 'Supplier Purchases';
+        }
+
         return $categories;
     }
 
@@ -92,6 +98,7 @@ class ExportService
             'purchases' => $this->purchases(),
             'expenses_payments' => $this->expensesAndPayments(),
             'farmer_purchases' => $this->farmerPurchases(),
+            'supplier_purchases' => $this->supplierPurchases(),
             default => throw new \InvalidArgumentException('Unknown export category "'.$key.'".'),
         };
     }
@@ -315,6 +322,43 @@ class ExportService
             $rows,
             [12, 11, 26, 22, 12, 11, 11, 11, 15, 11],
             ['Gross Amount' => 'col8']
+        );
+    }
+
+    /**
+     * The supplier purchase register (materials, packaging and services).
+     */
+    protected function supplierPurchases(): array
+    {
+        $rows = [];
+
+        $purchases = SupplierPurchase::with(['supplier', 'items'])
+            ->orderBy('date')
+            ->orderBy('id')
+            ->get();
+
+        foreach ($purchases as $purchase) {
+            $rows[] = [
+                $this->settings->formatDate($purchase->date),
+                $purchase->reference,
+                $purchase->supplier?->code,
+                $purchase->supplier?->name_en,
+                $purchase->items->map(fn ($line) => $line->description)->implode(', '),
+                $purchase->items->count(),
+                (float) $purchase->charges,
+                (float) $purchase->subtotal,
+                (float) $purchase->total_amount,
+                (float) $purchase->paid_amount,
+                (float) $purchase->remaining_amount,
+            ];
+        }
+
+        return $this->simple(
+            'Supplier Purchases',
+            ['Date', 'Reference', 'Supplier Code', 'Supplier', 'Items', 'Lines', 'Charges', 'Subtotal', 'Total Amount', 'Paid', 'Remaining'],
+            $rows,
+            [12, 14, 12, 26, 34, 8, 12, 14, 14, 13, 13],
+            ['Charges' => 'col6', 'Subtotal' => 'col7', 'Total Amount' => 'col8', 'Paid' => 'col9', 'Remaining' => 'col10']
         );
     }
 
