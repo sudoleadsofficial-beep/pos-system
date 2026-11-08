@@ -199,3 +199,18 @@ html[dir="rtl"] .rtl-flip {
     transform: scaleX(-1);
 }
 
+@media print {
+    body {
+        background: white !important;
+        color: black !important;
+    }
+    .print\:hidden {
+        display: none !important;
+    }
+    [data-radix-popper-content-wrapper],
+    [data-radix-portal] {
+        position: static !important;
+    }
+}
+
+

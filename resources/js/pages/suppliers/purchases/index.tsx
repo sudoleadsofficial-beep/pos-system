@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
+import ReceiptModal, { type ReceiptData } from '@/components/app/receipt-modal';
 import { toast } from 'sonner';
 
 interface SupplierOption {
@@ -137,6 +138,56 @@ export default function SupplierPurchasesIndex({
         note: '',
     });
 
+    const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+    const [receiptModalData, setReceiptModalData] = useState<ReceiptData | null>(null);
+
+    const openPrintForPurchase = (purchase: PurchaseRow) => {
+        setReceiptModalData({
+            receiptType: 'supplier_purchase',
+            titleEn: 'Supplier Purchase Bill',
+            titleUr: 'بل خریداری سپلائر',
+            receiptNo: purchase.reference,
+            date: purchase.date,
+            partyName: (isUrdu ? purchase.supplier_name_ur || purchase.supplier_name : purchase.supplier_name) || 'Supplier',
+            partyCode: purchase.supplier_code ? String(purchase.supplier_code) : undefined,
+            partyType: isUrdu ? 'سپلائر' : 'Supplier',
+            items: purchase.items.map((line) => {
+                const qty = Number(line.quantity) || 0;
+                const r = Number(line.rate) || 0;
+                return {
+                    description: line.description,
+                    nag: line.quantity,
+                    rate: line.rate,
+                    amount: Math.round(qty * r * 100) / 100,
+                };
+            }),
+            subtotal: purchase.subtotal,
+            bardana: purchase.charges,
+            totalAmount: purchase.total_amount,
+            paidAmount: purchase.paid_amount,
+            remainingBalance: purchase.remaining_amount,
+            notes: purchase.notes ?? undefined,
+        });
+        setReceiptModalOpen(true);
+    };
+
+    const openPrintForPayment = (row: PaymentRow) => {
+        setReceiptModalData({
+            receiptType: 'party_payment',
+            titleEn: 'Supplier Payment Voucher',
+            titleUr: 'واؤچر ادائیگی سپلائر',
+            receiptNo: row.reference || `SPMT-${row.id}`,
+            date: row.date,
+            partyName: (isUrdu ? row.supplier_name_ur || row.supplier_name : row.supplier_name) || 'Supplier',
+            partyCode: row.supplier_code ? String(row.supplier_code) : undefined,
+            partyType: isUrdu ? 'سپلائر' : 'Supplier',
+            totalAmount: row.amount,
+            paidAmount: row.amount,
+            notes: row.note ?? undefined,
+        });
+        setReceiptModalOpen(true);
+    };
+
     // Amount = quantity x rate, per line.
     const lineAmounts = useMemo(
         () =>
@@ -235,11 +286,43 @@ export default function SupplierPurchasesIndex({
             })),
         };
 
+        const supplierObj = suppliers.find((s) => String(s.id) === String(data.supplier_id));
+        const purchaseReceipt: ReceiptData = {
+            receiptType: 'supplier_purchase',
+            titleEn: 'Supplier Purchase Bill',
+            titleUr: 'بل خریداری سپلائر',
+            receiptNo: `SPUR-${Date.now().toString().slice(-6)}`,
+            date: data.date,
+            partyName: supplierObj ? (isUrdu ? supplierObj.name_ur || supplierObj.name_en : supplierObj.name_en) : 'Supplier',
+            partyCode: supplierObj ? String(supplierObj.code) : undefined,
+            partyType: isUrdu ? 'سپلائر' : 'Supplier',
+            partyArea: supplierObj?.city ?? undefined,
+            partyPhone: supplierObj?.phone ?? undefined,
+            items: data.items.map((line) => {
+                const qty = Number(line.quantity) || 0;
+                const r = Number(line.rate) || 0;
+                return {
+                    description: line.description || 'Materials',
+                    nag: line.quantity,
+                    rate: line.rate,
+                    amount: Math.round(qty * r * 100) / 100,
+                };
+            }),
+            subtotal: subtotal,
+            bardana: charges,
+            totalAmount: total,
+            paidAmount: paid,
+            remainingBalance: remaining,
+            notes: data.notes || undefined,
+        };
+
         if (editingId) {
             put(route('suppliers.purchases.update', editingId), {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success(t('suppliers.purchase_updated'));
+                    setReceiptModalData(purchaseReceipt);
+                    setReceiptModalOpen(true);
                     resetForm();
                 },
                 onError: () => toast.error(t('common.error')),
@@ -252,6 +335,8 @@ export default function SupplierPurchasesIndex({
             preserveScroll: true,
             onSuccess: () => {
                 toast.success(t('suppliers.purchase_saved'));
+                setReceiptModalData(purchaseReceipt);
+                setReceiptModalOpen(true);
                 resetForm();
             },
             onError: () => toast.error(t('common.error')),
@@ -278,10 +363,30 @@ export default function SupplierPurchasesIndex({
     function submitPayment(e: React.FormEvent) {
         e.preventDefault();
 
+        const pmtSupplier = suppliers.find((s) => String(s.id) === String(payment.supplier_id));
+        const pmtAmount = Number(payment.amount) || 0;
+        const pmtReceipt: ReceiptData = {
+            receiptType: 'party_payment',
+            titleEn: 'Supplier Payment Voucher',
+            titleUr: 'واؤچر ادائیگی سپلائر',
+            receiptNo: payment.reference || `SPMT-${Date.now().toString().slice(-6)}`,
+            date: payment.date,
+            partyName: pmtSupplier ? (isUrdu ? pmtSupplier.name_ur || pmtSupplier.name_en : pmtSupplier.name_en) : 'Supplier',
+            partyCode: pmtSupplier ? String(pmtSupplier.code) : undefined,
+            partyType: isUrdu ? 'سپلائر' : 'Supplier',
+            partyArea: pmtSupplier?.city ?? undefined,
+            partyPhone: pmtSupplier?.phone ?? undefined,
+            totalAmount: pmtAmount,
+            paidAmount: pmtAmount,
+            notes: payment.note || undefined,
+        };
+
         postPayment(route('suppliers.payments.store'), {
             preserveScroll: true,
             onSuccess: () => {
                 toast.success(t('suppliers.payment_saved'));
+                setReceiptModalData(pmtReceipt);
+                setReceiptModalOpen(true);
                 setPayment({
                     supplier_id: '',
                     date: payment.date,
@@ -813,6 +918,16 @@ export default function SupplierPurchasesIndex({
                                                             type="button"
                                                             variant="ghost"
                                                             size="icon"
+                                                            className="size-7 cursor-pointer text-muted-foreground hover:text-emerald-700"
+                                                            onClick={() => openPrintForPurchase(purchase)}
+                                                            title={t('common.print', 'Print Bill')}
+                                                        >
+                                                            <Icon name="PrinterIcon" className="size-3.5" />
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
                                                             className="size-7 cursor-pointer"
                                                             onClick={() => startEdit(purchase)}
                                                             title={t('common.edit')}
@@ -886,16 +1001,28 @@ export default function SupplierPurchasesIndex({
                                                     {row.reference ?? '-'}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="size-7 cursor-pointer text-muted-foreground hover:text-destructive"
-                                                        onClick={() => removePayment(row)}
-                                                        title={t('common.delete')}
-                                                    >
-                                                        <Icon name="TrashIcon" className="size-3.5" />
-                                                    </Button>
+                                                    <div className="flex gap-1">
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="size-7 cursor-pointer text-muted-foreground hover:text-emerald-700"
+                                                            onClick={() => openPrintForPayment(row)}
+                                                            title={t('common.print', 'Print Voucher')}
+                                                        >
+                                                            <Icon name="PrinterIcon" className="size-3.5" />
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="size-7 cursor-pointer text-muted-foreground hover:text-destructive"
+                                                            onClick={() => removePayment(row)}
+                                                            title={t('common.delete')}
+                                                        >
+                                                            <Icon name="TrashIcon" className="size-3.5" />
+                                                        </Button>
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ))
@@ -906,6 +1033,12 @@ export default function SupplierPurchasesIndex({
                     </CardContent>
                 </Card>
             </div>
+
+            <ReceiptModal
+                open={receiptModalOpen}
+                onOpenChange={setReceiptModalOpen}
+                data={receiptModalData}
+            />
         </AppLayout>
     );
 }

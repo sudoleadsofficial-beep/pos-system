@@ -94,12 +94,18 @@ export const jkcSidebarNav: NavGroup[] = [
                 url: "/farmers/reports",
                 icon: "ChartBarIcon",
             },
+            {
+                title: "nav.bijak",
+                url: "/farmers/settlements",
+                icon: "ReceiptIcon",
+            },
         ],
         includeRoutes: [
             "farmers.purchases",
             "farmers.payments",
             "farmers.inventory",
-            "farmers.reports"
+            "farmers.reports",
+            "farmers.settlements"
         ]
     },
     {
@@ -132,12 +138,17 @@ export const jkcSidebarNav: NavGroup[] = [
         isGroup: true,
         items: [
             {
-                title: "nav.general_ledger",
-                url: "/general-ledger",
+                title: "nav.cash_book_daily",
+                url: "/cash-book",
                 icon: "BookBookmarkIcon",
             },
+            {
+                title: "nav.general_ledger",
+                url: "/general-ledger",
+                icon: "ChartBarIcon",
+            },
         ],
-        includeRoutes: ["general-ledger"]
+        includeRoutes: ["cash-book", "general-ledger"]
     },
     {
         id: "masters",
@@ -180,6 +191,11 @@ export const jkcSidebarNav: NavGroup[] = [
                 url: "/masters/commission-agents",
                 icon: "ScalesIcon",
             },
+            {
+                title: "nav.commission_reports",
+                url: "/commission-reports",
+                icon: "ChartBarIcon",
+            },
         ],
         includeRoutes: [
             "merchants",
@@ -188,7 +204,8 @@ export const jkcSidebarNav: NavGroup[] = [
             "items",
             "areas",
             "suppliers",
-            "commission-agents"
+            "commission-agents",
+            "commission-reports"
         ]
     },
     {

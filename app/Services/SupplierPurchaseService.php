@@ -36,9 +36,9 @@ use Illuminate\Support\Facades\DB;
 class SupplierPurchaseService
 {
     /**
-     * Payment methods offered on the screens.
+     * Payment methods offered on the screens. Cash-only in V1.
      */
-    public const PAYMENT_METHODS = ['cash', 'bank', 'cheque', 'online', 'adjustment'];
+    public const PAYMENT_METHODS = ['cash'];
 
     public function __construct(
         protected PartyLedgerService $ledger,

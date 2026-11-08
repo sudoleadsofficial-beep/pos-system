@@ -38,6 +38,8 @@ class BusinessSettingsService
             'default_paper_size' => 'a4',
             'show_business_info' => '1',
             'date_format' => 'd-m-Y',
+            'opening_cash_balance' => '0',
+            'cash_book_start_date' => '2026-01-01',
         ];
     }
 

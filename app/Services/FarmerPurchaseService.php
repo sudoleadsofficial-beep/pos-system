@@ -42,6 +42,18 @@ class FarmerPurchaseService
     }
 
     /**
+     * The commission amount for an agent on a purchase line.
+     */
+    public function calculateCommission(int|float $amount, int|float|null $commissionPercent): float
+    {
+        if ($commissionPercent === null || (float) $commissionPercent <= 0) {
+            return 0.0;
+        }
+
+        return round(((float) $amount * (float) $commissionPercent) / 100, 2);
+    }
+
+    /**
      * Record a new arrival.
      */
     public function create(array $data): FarmerPurchase
@@ -50,11 +62,26 @@ class FarmerPurchaseService
             $amount = $this->calculateAmount($data['nag'], $data['rate'], $data['charges'] ?? 0);
             $paid = round((float) ($data['paid_amount'] ?? 0), 2);
 
+            $agentId = ! empty($data['commission_agent_id']) ? (int) $data['commission_agent_id'] : null;
+            $commPercent = null;
+            $commAmount = 0.0;
+
+            if ($agentId) {
+                if (isset($data['commission_percent']) && $data['commission_percent'] !== '' && $data['commission_percent'] !== null) {
+                    $commPercent = round((float) $data['commission_percent'], 2);
+                } else {
+                    $agent = \App\Models\CommissionAgent::find($agentId);
+                    $commPercent = $agent && $agent->commission_percent !== null ? (float) $agent->commission_percent : 0.0;
+                }
+                $commAmount = $this->calculateCommission($amount, $commPercent);
+            }
+
             $purchase = FarmerPurchase::create([
                 'date' => $data['date'],
                 'reference' => $data['reference'] ?? $this->nextReference($data['date']),
                 'farmer_id' => $data['farmer_id'],
                 'farmer_mark_id' => $data['farmer_mark_id'] ?? null,
+                'commission_agent_id' => $agentId,
                 'item_id' => $data['item_id'],
                 'nag' => (int) $data['nag'],
                 'weight' => round((float) ($data['weight'] ?? 0), 2),
@@ -63,6 +90,8 @@ class FarmerPurchaseService
                 'amount' => $amount,
                 'paid_amount' => $paid,
                 'remaining_amount' => round($amount - $paid, 2),
+                'commission_percent' => $commPercent,
+                'commission_amount' => $commAmount,
                 'notes' => $data['notes'] ?? null,
                 'created_by' => $data['created_by'] ?? null,
             ]);
@@ -83,14 +112,30 @@ class FarmerPurchaseService
     {
         return DB::transaction(function () use ($purchase, $data) {
             $previousFarmerId = (int) $purchase->farmer_id;
+            $previousAgentId = $purchase->commission_agent_id ? (int) $purchase->commission_agent_id : null;
 
             $amount = $this->calculateAmount($data['nag'], $data['rate'], $data['charges'] ?? 0);
             $paid = round((float) ($data['paid_amount'] ?? 0), 2);
+
+            $agentId = ! empty($data['commission_agent_id']) ? (int) $data['commission_agent_id'] : null;
+            $commPercent = null;
+            $commAmount = 0.0;
+
+            if ($agentId) {
+                if (isset($data['commission_percent']) && $data['commission_percent'] !== '' && $data['commission_percent'] !== null) {
+                    $commPercent = round((float) $data['commission_percent'], 2);
+                } else {
+                    $agent = \App\Models\CommissionAgent::find($agentId);
+                    $commPercent = $agent && $agent->commission_percent !== null ? (float) $agent->commission_percent : 0.0;
+                }
+                $commAmount = $this->calculateCommission($amount, $commPercent);
+            }
 
             $purchase->update([
                 'date' => $data['date'],
                 'farmer_id' => $data['farmer_id'],
                 'farmer_mark_id' => $data['farmer_mark_id'] ?? null,
+                'commission_agent_id' => $agentId,
                 'item_id' => $data['item_id'],
                 'nag' => (int) $data['nag'],
                 'weight' => round((float) ($data['weight'] ?? 0), 2),
@@ -99,10 +144,12 @@ class FarmerPurchaseService
                 'amount' => $amount,
                 'paid_amount' => $paid,
                 'remaining_amount' => round($amount - $paid, 2),
+                'commission_percent' => $commPercent,
+                'commission_amount' => $commAmount,
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            $this->syncLedger($purchase, $previousFarmerId);
+            $this->syncLedger($purchase, $previousFarmerId, $previousAgentId);
 
             return $purchase->fresh();
         });
@@ -115,13 +162,19 @@ class FarmerPurchaseService
     {
         DB::transaction(function () use ($purchase) {
             $farmerId = (int) $purchase->farmer_id;
+            $agentId = $purchase->commission_agent_id ? (int) $purchase->commission_agent_id : null;
 
-            $this->removeLedgerRow($purchase->ledger_entry_id);
-            $this->removeLedgerRow($purchase->payment_ledger_entry_id);
+            $this->removeLedgerRow($purchase->ledger_entry_id, PartyService::FARMER);
+            $this->removeLedgerRow($purchase->payment_ledger_entry_id, PartyService::FARMER);
+            $this->removeLedgerRow($purchase->agent_ledger_entry_id, PartyService::COMMISSION_AGENT);
 
             $purchase->delete();
 
             $this->ledger->recalculate(PartyService::FARMER, $farmerId);
+
+            if ($agentId) {
+                $this->ledger->recalculate(PartyService::COMMISSION_AGENT, $agentId);
+            }
         });
     }
 
@@ -148,9 +201,10 @@ class FarmerPurchaseService
     }
 
     /**
-     * Make sure the purchase owns exactly one payable row and one payment row.
+     * Make sure the purchase owns exactly one payable row, one payment row (if paid),
+     * and one commission agent payable row (if commission agent selected).
      */
-    protected function syncLedger(FarmerPurchase $purchase, ?int $previousFarmerId = null): void
+    protected function syncLedger(FarmerPurchase $purchase, ?int $previousFarmerId = null, ?int $previousAgentId = null): void
     {
         $farmerId = (int) $purchase->farmer_id;
 
@@ -167,6 +221,7 @@ class FarmerPurchaseService
 
         $purchase->ledger_entry_id = $this->syncRow(
             $purchase->ledger_entry_id,
+            PartyService::FARMER,
             $farmerId,
             $payable
         );
@@ -185,12 +240,43 @@ class FarmerPurchaseService
         if ((float) $purchase->paid_amount > 0) {
             $purchase->payment_ledger_entry_id = $this->syncRow(
                 $purchase->payment_ledger_entry_id,
+                PartyService::FARMER,
                 $farmerId,
                 $payment
             );
         } else {
-            $this->removeLedgerRow($purchase->payment_ledger_entry_id);
+            $this->removeLedgerRow($purchase->payment_ledger_entry_id, PartyService::FARMER);
             $purchase->payment_ledger_entry_id = null;
+        }
+
+        // Commission Agent row, only when an agent is selected and commission is > 0
+        $agentId = $purchase->commission_agent_id ? (int) $purchase->commission_agent_id : null;
+        $commissionAmount = (float) $purchase->commission_amount;
+
+        if ($agentId && $commissionAmount > 0) {
+            $commission = [
+                'date' => $purchase->date,
+                'direction' => PartyLedgerEntry::DIRECTION_JAMA,
+                'amount' => $commissionAmount,
+                'category' => 'commission',
+                'description' => "Commission on arrival {$purchase->reference}",
+                'reference' => $purchase->reference,
+                'created_by' => $purchase->created_by,
+            ];
+
+            $purchase->agent_ledger_entry_id = $this->syncRow(
+                $purchase->agent_ledger_entry_id,
+                PartyService::COMMISSION_AGENT,
+                $agentId,
+                $commission
+            );
+
+            $this->ledger->recalculate(PartyService::COMMISSION_AGENT, $agentId);
+        } else {
+            if ($purchase->agent_ledger_entry_id) {
+                $this->removeLedgerRow($purchase->agent_ledger_entry_id, PartyService::COMMISSION_AGENT);
+                $purchase->agent_ledger_entry_id = null;
+            }
         }
 
         $purchase->saveQuietly();
@@ -201,31 +287,36 @@ class FarmerPurchaseService
         if ($previousFarmerId !== null && $previousFarmerId !== $farmerId) {
             $this->ledger->recalculate(PartyService::FARMER, $previousFarmerId);
         }
+
+        // If the commission agent changed or was cleared, recalculate the previous agent's balance too.
+        if ($previousAgentId !== null && $previousAgentId !== $agentId) {
+            $this->ledger->recalculate(PartyService::COMMISSION_AGENT, $previousAgentId);
+        }
     }
 
     /**
      * Update a ledger row in place, or create it when it is missing.
      */
-    protected function syncRow(?int $entryId, int $partyId, array $attributes): int
+    protected function syncRow(?int $entryId, string $partyType, int $partyId, array $attributes): int
     {
         $entry = $entryId ? PartyLedgerEntry::find($entryId) : null;
 
-        if ($entry && (int) $entry->party_id === $partyId) {
-            $this->ledger->updateEntry(PartyService::FARMER, $entry, $attributes);
+        if ($entry && (int) $entry->party_id === $partyId && $entry->party_type === $partyType) {
+            $this->ledger->updateEntry($partyType, $entry, $attributes);
 
             return (int) $entry->id;
         }
 
-        // A row for a different farmer, or a row the user deleted by hand:
+        // A row for a different party or type, or a row the user deleted by hand:
         // drop it and write a fresh one.
         if ($entry) {
-            $this->ledger->deleteEntry(PartyService::FARMER, $entry);
+            $this->ledger->deleteEntry($entry->party_type, $entry);
         }
 
-        return (int) $this->ledger->addEntry(PartyService::FARMER, $partyId, $attributes)->id;
+        return (int) $this->ledger->addEntry($partyType, $partyId, $attributes)->id;
     }
 
-    protected function removeLedgerRow(?int $entryId): void
+    protected function removeLedgerRow(?int $entryId, string $partyType = PartyService::FARMER): void
     {
         if (! $entryId) {
             return;
@@ -234,7 +325,7 @@ class FarmerPurchaseService
         $entry = PartyLedgerEntry::find($entryId);
 
         if ($entry) {
-            $this->ledger->deleteEntry(PartyService::FARMER, $entry);
+            $this->ledger->deleteEntry($partyType, $entry);
         }
     }
 

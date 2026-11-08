@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
+import ReceiptModal, { type ReceiptData } from '@/components/app/receipt-modal';
 import { toast } from 'sonner';
 
 interface Receipt {
@@ -86,6 +87,29 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
         setSelectedRowIndex(rows.length > 0 ? 0 : -1);
     }, [filters.date, rows]);
 
+    const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+    const [receiptModalData, setReceiptModalData] = useState<ReceiptData | null>(null);
+
+    const openPrintForReceipt = (row: WasooliRow, receipt: { amount: number; type: string; id?: number; note?: string | null }) => {
+        setReceiptModalData({
+            receiptType: 'merchant_receipt',
+            titleEn: receipt.type === 'same_day_cash' ? 'Cash Receipt (Naqdi)' : 'Recovery Receipt (Wasooli)',
+            titleUr: receipt.type === 'same_day_cash' ? 'رسید وصولی نقدی' : 'رسید وصولی بقایا (وصولی)',
+            receiptNo: receipt.id ? `WREC-${receipt.id}` : `WREC-${Date.now().toString().slice(-6)}`,
+            date: selectedDate,
+            partyName: isUrdu ? row.name_ur || row.name : row.name,
+            partyCode: String(row.code),
+            partyType: isUrdu ? 'بیوپاری' : 'Merchant',
+            partyPhone: row.phone,
+            totalAmount: Number(receipt.amount),
+            paidAmount: Number(receipt.amount),
+            previousBalance: row.sabiqa,
+            closingBalance: row.total_baqaya,
+            notes: receipt.note || undefined,
+        });
+        setReceiptModalOpen(true);
+    };
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: t('nav.merchant_side'), href: '#' },
         { title: t('nav.wasooli'), href: '/wasooli' },
@@ -142,6 +166,8 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
 
         setSavingId(merchantId);
 
+        const targetRow = rows.find(r => r.merchant_id === merchantId);
+
         router.post('/merchants/wasooli', {
             merchant_id: merchantId,
             date: selectedDate,
@@ -152,6 +178,9 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
             onSuccess: () => {
                 toast.success(t('common.saved'));
                 setSavingId(null);
+                if (targetRow) {
+                    openPrintForReceipt(targetRow, { amount, type: 'recovery', note: editedNotes[merchantId] });
+                }
             },
             onError: () => {
                 toast.error(t('common.error'));
@@ -407,6 +436,18 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
+                                                                className="size-6 cursor-pointer text-muted-foreground hover:text-emerald-700"
+                                                                onClick={e => {
+                                                                    e.stopPropagation();
+                                                                    openPrintForReceipt(row, receipt);
+                                                                }}
+                                                                title={t('common.print', 'Print Receipt')}
+                                                            >
+                                                                <Icon name="PrinterIcon" className="w-3 h-3" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
                                                                 className="size-6 cursor-pointer text-muted-foreground hover:text-primary"
                                                                 onClick={e => {
                                                                     e.stopPropagation();
@@ -534,9 +575,9 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
                             <span className="font-semibold text-emerald-100">Rs. {Number(totals.total_amroza).toLocaleString()}</span>
                         </div>
 
-                        <div className="bg-blue-900/90 px-3 py-1 rounded">
-                            <span className="text-blue-200 text-xs font-sans me-1">{t('wasooli.wasooli')}:</span>
-                            <span className="font-semibold text-blue-100">Rs. {Number(totals.total_wasooli).toLocaleString()}</span>
+                        <div className="bg-teal-900/90 px-3 py-1 rounded">
+                            <span className="text-teal-200 text-xs font-sans me-1">{t('wasooli.wasooli')}:</span>
+                            <span className="font-semibold text-teal-100">Rs. {Number(totals.total_wasooli).toLocaleString()}</span>
                         </div>
 
                         <div className="bg-amber-700 px-3 py-1 rounded font-bold text-white shadow-xs">
@@ -546,6 +587,12 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
                     </div>
                 </div>
             </div>
+
+            <ReceiptModal
+                open={receiptModalOpen}
+                onOpenChange={setReceiptModalOpen}
+                data={receiptModalData}
+            />
         </AppLayout>
     );
 }

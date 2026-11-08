@@ -369,7 +369,7 @@ class ExportService
     {
         $rows = [];
 
-        $purchases = FarmerPurchase::with(['farmer', 'mark', 'item'])
+        $purchases = FarmerPurchase::with(['farmer', 'mark', 'item', 'commissionAgent'])
             ->orderBy('date')
             ->orderBy('id')
             ->get();
@@ -389,15 +389,18 @@ class ExportService
                 (float) $purchase->amount,
                 (float) $purchase->paid_amount,
                 (float) $purchase->remaining_amount,
+                $purchase->commissionAgent?->name_en ?? '',
+                $purchase->commission_percent !== null ? (float) $purchase->commission_percent : '',
+                (float) $purchase->commission_amount,
             ];
         }
 
         return $this->simple(
             'Farmer Purchases',
-            ['Date', 'Reference', 'Farmer Code', 'Farmer', 'Mark', 'Item', 'Bags (Nag)', 'Weight', 'Rate', 'Charges', 'Amount', 'Paid', 'Remaining'],
+            ['Date', 'Reference', 'Farmer Code', 'Farmer', 'Mark', 'Item', 'Bags (Nag)', 'Weight', 'Rate', 'Charges', 'Amount', 'Paid', 'Remaining', 'Agent', 'Comm %', 'Comm Amount'],
             $rows,
-            [12, 14, 12, 26, 16, 22, 12, 11, 11, 11, 14, 13, 13],
-            ['Amount' => 'col10', 'Paid' => 'col11', 'Remaining' => 'col12']
+            [12, 14, 12, 26, 16, 22, 12, 11, 11, 11, 14, 13, 13, 20, 10, 13],
+            ['Amount' => 'col10', 'Paid' => 'col11', 'Remaining' => 'col12', 'Comm Amount' => 'col15']
         );
     }
 

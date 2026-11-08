@@ -56,8 +56,8 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
     }, [locale]);
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: t('nav.dashboard'), href: '/dashboard' },
-        { title: t('nav.settings'), href: '/settings' },
+        { title: t('nav.dashboard', 'Dashboard'), href: '/dashboard' },
+        { title: t('nav.settings', 'Settings'), href: '/settings' },
     ];
 
     function handleSubmit(e: React.FormEvent) {
@@ -65,8 +65,8 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
 
         post(route('settings.update'), {
             preserveScroll: true,
-            onSuccess: () => toast.success(t('settings.saved')),
-            onError: () => toast.error(t('common.error')),
+            onSuccess: () => toast.success(t('settings.saved', 'Settings saved.')),
+            onError: () => toast.error(t('common.error', 'An error occurred.')),
         });
     }
 
@@ -85,7 +85,7 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
 
     function handleLogoUpload() {
         if (!logoForm.data.logo) {
-            toast.error(t('settings.logo_required'));
+            toast.error(t('settings.logo_required', 'Please choose a logo file first.'));
 
             return;
         }
@@ -93,8 +93,8 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
         logoForm.post(route('settings.logo'), {
             forceFormData: true,
             preserveScroll: true,
-            onSuccess: () => toast.success(t('settings.logo_updated')),
-            onError: () => toast.error(t('common.error')),
+            onSuccess: () => toast.success(t('settings.logo_updated', 'Logo updated.')),
+            onError: () => toast.error(t('common.error', 'An error occurred.')),
         });
     }
 
@@ -103,35 +103,35 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
             preserveScroll: true,
             onSuccess: () => {
                 setLogoPreview(null);
-                toast.success(t('settings.logo_removed'));
+                toast.success(t('settings.logo_removed', 'Logo removed.'));
             },
-            onError: () => toast.error(t('common.error')),
+            onError: () => toast.error(t('common.error', 'An error occurred.')),
         });
     }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={t('nav.settings')} />
+            <Head title={t('nav.settings', 'Settings')} />
 
             <div className="p-3 space-y-4" dir={isUrdu ? 'rtl' : 'ltr'}>
-                <div className="flex items-center gap-2 border-b pb-2">
-                    <Icon name="GearIcon" className="size-5 text-blue-700" />
-                    <h1 className="text-xl font-bold text-blue-900">{t('settings.title')}</h1>
+                <div className="flex items-center gap-2 border-b border-border/60 pb-3">
+                    <Icon name="GearIcon" className="size-5 text-emerald-700" />
+                    <h1 className="text-xl font-bold text-emerald-950 dark:text-emerald-400">{t('settings.title', 'Settings')}</h1>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* -------------------------------------------------------
                         Business information
                     ------------------------------------------------------- */}
-                    <Card>
+                    <Card className="border border-border/60 shadow-sm">
                         <CardHeader>
-                            <CardTitle className="text-base">{t('settings.business_information')}</CardTitle>
-                            <CardDescription>{t('settings.business_information_hint')}</CardDescription>
+                            <CardTitle className="text-base text-foreground font-semibold">{t('settings.business_information', 'Business Information')}</CardTitle>
+                            <CardDescription>{t('settings.business_information_hint', 'These details are printed on receipts, invoices and reports.')}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="grid gap-1.5">
-                                    <Label htmlFor="business_name">{t('settings.business_name')}</Label>
+                                    <Label htmlFor="business_name">{t('settings.business_name', 'Business name')}</Label>
                                     <Input
                                         id="business_name"
                                         value={data.business_name}
@@ -144,7 +144,7 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                                 </div>
 
                                 <div className="grid gap-1.5">
-                                    <Label htmlFor="business_name_ur">{t('settings.business_name_ur')}</Label>
+                                    <Label htmlFor="business_name_ur">{t('settings.business_name_ur', 'Business name (Urdu)')}</Label>
                                     <Input
                                         id="business_name_ur"
                                         dir="rtl"
@@ -154,7 +154,7 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                                 </div>
 
                                 <div className="grid gap-1.5">
-                                    <Label htmlFor="business_tagline">{t('settings.business_tagline')}</Label>
+                                    <Label htmlFor="business_tagline">{t('settings.business_tagline', 'Tagline')}</Label>
                                     <Input
                                         id="business_tagline"
                                         value={data.business_tagline}
@@ -163,7 +163,7 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                                 </div>
 
                                 <div className="grid gap-1.5">
-                                    <Label htmlFor="business_tagline_ur">{t('settings.business_tagline_ur')}</Label>
+                                    <Label htmlFor="business_tagline_ur">{t('settings.business_tagline_ur', 'Tagline (Urdu)')}</Label>
                                     <Input
                                         id="business_tagline_ur"
                                         dir="rtl"
@@ -173,7 +173,7 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                                 </div>
 
                                 <div className="grid gap-1.5 md:col-span-2">
-                                    <Label htmlFor="business_address">{t('settings.business_address')}</Label>
+                                    <Label htmlFor="business_address">{t('settings.business_address', 'Address')}</Label>
                                     <Textarea
                                         id="business_address"
                                         rows={2}
@@ -183,7 +183,7 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                                 </div>
 
                                 <div className="grid gap-1.5">
-                                    <Label htmlFor="business_phone">{t('settings.business_phone')}</Label>
+                                    <Label htmlFor="business_phone">{t('settings.business_phone', 'Phone number')}</Label>
                                     <Input
                                         id="business_phone"
                                         dir="ltr"
@@ -193,7 +193,7 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                                 </div>
 
                                 <div className="grid gap-1.5">
-                                    <Label htmlFor="business_phone2">{t('settings.business_phone2')}</Label>
+                                    <Label htmlFor="business_phone2">{t('settings.business_phone2', 'Second phone number (optional)')}</Label>
                                     <Input
                                         id="business_phone2"
                                         dir="ltr"
@@ -207,12 +207,12 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
 
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="grid gap-1.5">
-                                    <Label htmlFor="logo">{t('settings.business_logo')}</Label>
+                                    <Label htmlFor="logo">{t('settings.business_logo', 'Business logo')}</Label>
                                     <div className="flex items-center gap-3">
                                         {logoPreview ? (
                                             <img
                                                 src={logoPreview}
-                                                alt={t('settings.business_logo')}
+                                                alt={t('settings.business_logo', 'Business logo')}
                                                 className="size-14 rounded border bg-white object-contain p-1"
                                             />
                                         ) : (
@@ -236,7 +236,7 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                                                     onClick={handleLogoUpload}
                                                     disabled={logoForm.processing}
                                                 >
-                                                    {t('common.upload')}
+                                                    {t('common.upload', 'Upload')}
                                                 </Button>
                                                 {logoPreview && (
                                                     <Button
@@ -246,7 +246,7 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                                                         className="text-destructive"
                                                         onClick={handleLogoRemove}
                                                     >
-                                                        {t('common.delete')}
+                                                        {t('common.delete', 'Delete')}
                                                     </Button>
                                                 )}
                                             </div>
@@ -263,15 +263,15 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                     {/* -------------------------------------------------------
                         Language and display
                     ------------------------------------------------------- */}
-                    <Card>
+                    <Card className="border border-border/60 shadow-sm">
                         <CardHeader>
-                            <CardTitle className="text-base">{t('settings.language_display')}</CardTitle>
-                            <CardDescription>{t('settings.language_display_hint')}</CardDescription>
+                            <CardTitle className="text-base text-foreground font-semibold">{t('settings.language_display', 'Language & Display')}</CardTitle>
+                            <CardDescription>{t('settings.language_display_hint', 'Choose the language of the screen and the light or dark look.')}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="grid gap-1.5">
-                                    <Label htmlFor="locale">{t('settings.language')}</Label>
+                                    <Label htmlFor="locale">{t('settings.language', 'Language')}</Label>
                                     <Select value={data.locale} onValueChange={handleLanguage}>
                                         <SelectTrigger id="locale">
                                             <SelectValue />
@@ -284,7 +284,7 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                                 </div>
 
                                 <div className="grid gap-1.5">
-                                    <Label>{t('settings.appearance')}</Label>
+                                    <Label>{t('settings.appearance', 'Appearance')}</Label>
                                     <div className="pt-1">
                                         <AppearanceTabs />
                                     </div>
@@ -296,15 +296,15 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                     {/* -------------------------------------------------------
                         Printing
                     ------------------------------------------------------- */}
-                    <Card>
+                    <Card className="border border-border/60 shadow-sm">
                         <CardHeader>
-                            <CardTitle className="text-base">{t('settings.printing')}</CardTitle>
-                            <CardDescription>{t('settings.printing_hint')}</CardDescription>
+                            <CardTitle className="text-base text-foreground font-semibold">{t('settings.printing', 'Printing')}</CardTitle>
+                            <CardDescription>{t('settings.printing_hint', 'How your printouts and PDF exports should look.')}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="grid gap-1.5">
-                                    <Label htmlFor="default_paper_size">{t('settings.paper_size')}</Label>
+                                    <Label htmlFor="default_paper_size">{t('settings.paper_size', 'Default paper size')}</Label>
                                     <Select
                                         value={data.default_paper_size}
                                         onValueChange={(value) => setData('default_paper_size', value)}
@@ -323,7 +323,7 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                                 </div>
 
                                 <div className="grid gap-1.5">
-                                    <Label htmlFor="show_business_info">{t('settings.show_business_info')}</Label>
+                                    <Label htmlFor="show_business_info">{t('settings.show_business_info', 'Show business information on printouts')}</Label>
                                     <div className="flex items-center gap-3 pt-1">
                                         <Switch
                                             id="show_business_info"
@@ -331,7 +331,7 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                                             onCheckedChange={(checked) => setData('show_business_info', checked)}
                                         />
                                         <span className="text-xs text-muted-foreground">
-                                            {t('settings.show_business_info_hint')}
+                                            {t('settings.show_business_info_hint', 'Turn off to print only the report.')}
                                         </span>
                                     </div>
                                 </div>
@@ -342,21 +342,21 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                     {/* -------------------------------------------------------
                         General
                     ------------------------------------------------------- */}
-                    <Card>
+                    <Card className="border border-border/60 shadow-sm">
                         <CardHeader>
-                            <CardTitle className="text-base">{t('settings.general')}</CardTitle>
-                            <CardDescription>{t('settings.general_hint')}</CardDescription>
+                            <CardTitle className="text-base text-foreground font-semibold">{t('settings.general', 'General')}</CardTitle>
+                            <CardDescription>{t('settings.general_hint', 'Basic preferences for this installation.')}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="grid gap-1.5">
-                                    <Label htmlFor="currency">{t('settings.currency')}</Label>
+                                    <Label htmlFor="currency">{t('settings.currency', 'Currency')}</Label>
                                     <Input id="currency" value="PKR" readOnly disabled />
-                                    <span className="text-xs text-muted-foreground">{t('settings.currency_hint')}</span>
+                                    <span className="text-xs text-muted-foreground">{t('settings.currency_hint', 'Pakistani Rupee is fixed for V1.')}</span>
                                 </div>
 
                                 <div className="grid gap-1.5">
-                                    <Label htmlFor="date_format">{t('settings.date_format')}</Label>
+                                    <Label htmlFor="date_format">{t('settings.date_format', 'Date format')}</Label>
                                     <Select
                                         value={data.date_format}
                                         onValueChange={(value) => setData('date_format', value)}
@@ -378,8 +378,8 @@ export default function SettingsIndex({ settings, business, locale, paperSizes, 
                     </Card>
 
                     <div className="flex justify-end pb-4">
-                        <Button type="submit" disabled={processing} className="min-w-32">
-                            {processing ? t('common.saving') : t('common.save')}
+                        <Button type="submit" disabled={processing} className="min-w-32 bg-emerald-700 hover:bg-emerald-800 text-white">
+                            {processing ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
                         </Button>
                     </div>
                 </form>

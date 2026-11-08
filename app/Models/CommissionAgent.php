@@ -57,6 +57,11 @@ class CommissionAgent extends Model
             ->where('party_type', PartyLedgerEntry::TYPE_COMMISSION_AGENT);
     }
 
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(FarmerPurchase::class, 'commission_agent_id');
+    }
+
     public static function boot()
     {
         parent::boot();

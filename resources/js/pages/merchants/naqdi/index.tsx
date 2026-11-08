@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
+import ReceiptModal, { type ReceiptData } from '@/components/app/receipt-modal';
 import { toast } from 'sonner';
 
 interface Receipt {
@@ -76,6 +77,26 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
         setSelectedRowIndex(rows.length > 0 ? 0 : -1);
     }, [filters.date, rows]);
 
+    const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+    const [receiptModalData, setReceiptModalData] = useState<ReceiptData | null>(null);
+
+    const openPrintForReceipt = (row: NaqdiRow, receipt: { amount: number; type: string; id?: number }) => {
+        setReceiptModalData({
+            receiptType: 'merchant_receipt',
+            titleEn: receipt.type === 'same_day_cash' ? 'Cash Receipt (Naqdi)' : 'Recovery Receipt (Wasooli)',
+            titleUr: receipt.type === 'same_day_cash' ? 'رسید وصولی نقدی' : 'رسید وصولی بقایا',
+            receiptNo: receipt.id ? `REC-${receipt.id}` : `REC-${Date.now().toString().slice(-6)}`,
+            date: selectedDate,
+            partyName: isUrdu ? row.name_ur || row.name : row.name,
+            partyCode: String(row.code),
+            partyType: isUrdu ? 'بیوپاری' : 'Merchant',
+            totalAmount: Number(receipt.amount),
+            paidAmount: Number(receipt.amount),
+            closingBalance: row.total_baqaya,
+        });
+        setReceiptModalOpen(true);
+    };
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: t('nav.merchant_side'), href: '#' },
         { title: t('nav.naqdi'), href: '/naqdi' },
@@ -118,6 +139,8 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
 
         setSavingId(merchantId);
 
+        const targetRow = rows.find(r => r.merchant_id === merchantId);
+
         router.post('/merchants/naqdi', {
             merchant_id: merchantId,
             date: selectedDate,
@@ -127,6 +150,9 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
             onSuccess: () => {
                 toast.success(t('common.saved'));
                 setSavingId(null);
+                if (targetRow) {
+                    openPrintForReceipt(targetRow, { amount, type: 'same_day_cash' });
+                }
             },
             onError: () => {
                 toast.error(t('common.error'));
@@ -355,6 +381,18 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
+                                                                className="size-6 cursor-pointer text-muted-foreground hover:text-emerald-700"
+                                                                onClick={e => {
+                                                                    e.stopPropagation();
+                                                                    openPrintForReceipt(row, receipt);
+                                                                }}
+                                                                title={t('common.print', 'Print Receipt')}
+                                                            >
+                                                                <Icon name="PrinterIcon" className="w-3 h-3" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
                                                                 className="size-6 cursor-pointer text-muted-foreground hover:text-primary"
                                                                 onClick={e => {
                                                                     e.stopPropagation();
@@ -483,6 +521,12 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                     </div>
                 </div>
             </div>
+
+            <ReceiptModal
+                open={receiptModalOpen}
+                onOpenChange={setReceiptModalOpen}
+                data={receiptModalData}
+            />
         </AppLayout>
     );
 }

@@ -39,6 +39,12 @@ class FarmerPurchase extends Model
         'paid_amount',
         'remaining_amount',
         'notes',
+        'commission_agent_id',
+        'commission_percent',
+        'commission_amount',
+        'agent_ledger_entry_id',
+        'is_settled',
+        'settlement_id',
         'ledger_entry_id',
         'payment_ledger_entry_id',
         'created_by',
@@ -53,6 +59,12 @@ class FarmerPurchase extends Model
         'amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'remaining_amount' => 'decimal:2',
+        'commission_agent_id' => 'integer',
+        'commission_percent' => 'decimal:2',
+        'commission_amount' => 'decimal:2',
+        'agent_ledger_entry_id' => 'integer',
+        'is_settled' => 'boolean',
+        'settlement_id' => 'integer',
     ];
 
     public function farmer(): BelongsTo
@@ -65,6 +77,16 @@ class FarmerPurchase extends Model
         return $this->belongsTo(FarmerMark::class, 'farmer_mark_id');
     }
 
+    public function commissionAgent(): BelongsTo
+    {
+        return $this->belongsTo(CommissionAgent::class, 'commission_agent_id');
+    }
+
+    public function agentLedgerEntry(): BelongsTo
+    {
+        return $this->belongsTo(PartyLedgerEntry::class, 'agent_ledger_entry_id');
+    }
+
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
@@ -73,6 +95,11 @@ class FarmerPurchase extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function settlement(): BelongsTo
+    {
+        return $this->belongsTo(FarmerSettlement::class, 'settlement_id');
     }
 
     /**

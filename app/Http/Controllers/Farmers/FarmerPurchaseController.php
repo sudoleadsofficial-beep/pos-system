@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Farmers;
 
 use App\Http\Controllers\Controller;
+use App\Models\CommissionAgent;
 use App\Models\Farmer;
 use App\Models\FarmerMark;
 use App\Models\FarmerPurchase;
@@ -36,6 +37,7 @@ class FarmerPurchaseController extends Controller
             'farmers' => $this->farmerOptions(),
             'marks' => $this->markOptions(),
             'items' => $this->itemOptions(),
+            'commissionAgents' => $this->commissionAgentOptions(),
             'purchases' => $this->recentPurchases(),
             'outstanding' => $this->outstandingByFarmer(),
             'availableStock' => $this->inventory->availableByItem(),
@@ -109,12 +111,14 @@ class FarmerPurchaseController extends Controller
             'date' => 'required|date',
             'farmer_id' => 'required|exists:farmers,id',
             'farmer_mark_id' => 'nullable|exists:farmer_marks,id',
+            'commission_agent_id' => 'nullable|exists:commission_agents,id',
             'item_id' => 'required|exists:items,id',
             'nag' => 'required|integer|min:1',
             'weight' => 'nullable|numeric|min:0',
             'rate' => 'required|numeric|min:0',
             'charges' => 'nullable|numeric|min:0',
             'paid_amount' => 'nullable|numeric|min:0',
+            'commission_percent' => 'nullable|numeric|min:0|max:100',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -174,7 +178,7 @@ class FarmerPurchaseController extends Controller
 
     protected function recentPurchases(): array
     {
-        return FarmerPurchase::with(['farmer', 'mark', 'item'])
+        return FarmerPurchase::with(['farmer', 'mark', 'item', 'commissionAgent'])
             ->orderByDesc('date')
             ->orderByDesc('id')
             ->limit(50)
@@ -188,6 +192,10 @@ class FarmerPurchaseController extends Controller
                 'farmer_name' => $purchase->farmer?->name_en,
                 'farmer_name_ur' => $purchase->farmer?->name_ur,
                 'mark_name' => $purchase->mark?->name_en,
+                'commission_agent_id' => $purchase->commission_agent_id,
+                'commission_agent_code' => $purchase->commissionAgent?->code,
+                'commission_agent_name' => $purchase->commissionAgent?->name_en,
+                'commission_agent_name_ur' => $purchase->commissionAgent?->name_ur,
                 'item_id' => $purchase->item_id,
                 'item_name' => $purchase->item?->name_en,
                 'item_name_ur' => $purchase->item?->name_ur,
@@ -198,8 +206,22 @@ class FarmerPurchaseController extends Controller
                 'amount' => (float) $purchase->amount,
                 'paid_amount' => (float) $purchase->paid_amount,
                 'remaining_amount' => (float) $purchase->remaining_amount,
+                'commission_percent' => $purchase->commission_percent !== null ? (float) $purchase->commission_percent : null,
+                'commission_amount' => (float) $purchase->commission_amount,
                 'notes' => $purchase->notes,
             ])->all();
+    }
+
+    protected function commissionAgentOptions(): array
+    {
+        return CommissionAgent::where('status', 'active')->orderBy('code')->get()->map(fn ($agent) => [
+            'id' => $agent->id,
+            'code' => $agent->code,
+            'name_en' => $agent->name_en,
+            'name_ur' => $agent->name_ur,
+            'commission_percent' => $agent->commission_percent !== null ? (float) $agent->commission_percent : null,
+            'current_balance' => (float) $agent->current_balance,
+        ])->all();
     }
 
     /**

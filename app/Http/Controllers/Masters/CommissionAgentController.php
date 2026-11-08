@@ -109,4 +109,33 @@ class CommissionAgentController extends Controller
             return back()->with('error', $e->getMessage());
         }
     }
+
+    public function payment(Request $request)
+    {
+        $validated = $request->validate([
+            'commission_agent_id' => 'required|exists:commission_agents,id',
+            'date' => 'required|date',
+            'amount' => 'required|numeric|min:0.01',
+            'description' => 'nullable|string|max:255',
+            'reference' => 'nullable|string|max:255',
+        ]);
+
+        $agentId = (int) $validated['commission_agent_id'];
+
+        app(\App\Services\PartyLedgerService::class)->addEntry(
+            \App\Services\PartyService::COMMISSION_AGENT,
+            $agentId,
+            [
+                'date' => $validated['date'],
+                'direction' => \App\Models\PartyLedgerEntry::DIRECTION_BANAM,
+                'amount' => round((float) $validated['amount'], 2),
+                'category' => 'payment',
+                'description' => ($validated['description'] ?? null) ?: 'Cash Paid',
+                'reference' => $validated['reference'] ?? null,
+                'created_by' => $request->user()?->id,
+            ]
+        );
+
+        return back()->with('success', 'Payment recorded.');
+    }
 }

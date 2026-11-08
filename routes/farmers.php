@@ -30,4 +30,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Farmer side reports
     Route::get('farmers/reports', [InventoryController::class, 'reports'])
         ->name('farmers.reports');
+
+    // Consignment Settlement & Farmer Bijak (بیجک کسان)
+    Route::get('farmers/settlements', [\App\Http\Controllers\Farmers\FarmerSettlementController::class, 'index'])
+        ->name('farmers.settlements.index');
+    Route::post('farmers/settlements', [\App\Http\Controllers\Farmers\FarmerSettlementController::class, 'store'])
+        ->name('farmers.settlements.store');
+    Route::get('farmers/settlements/{id}', [\App\Http\Controllers\Farmers\FarmerSettlementController::class, 'show'])
+        ->name('farmers.settlements.show');
+    Route::delete('farmers/settlements/{id}', [\App\Http\Controllers\Farmers\FarmerSettlementController::class, 'destroy'])
+        ->name('farmers.settlements.destroy');
 });

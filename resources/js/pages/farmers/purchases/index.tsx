@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
+import ReceiptModal, { type ReceiptData } from '@/components/app/receipt-modal';
 import { toast } from 'sonner';
 
 interface FarmerOption {
@@ -40,6 +41,15 @@ interface ItemOption {
     default_rate: number;
 }
 
+interface CommissionAgentOption {
+    id: number;
+    code: number;
+    name_en: string;
+    name_ur: string;
+    commission_percent: number | null;
+    current_balance: number;
+}
+
 interface PurchaseRow {
     id: number;
     date: string;
@@ -49,6 +59,10 @@ interface PurchaseRow {
     farmer_name: string | null;
     farmer_name_ur: string | null;
     mark_name: string | null;
+    commission_agent_id: number | null;
+    commission_agent_code: number | null;
+    commission_agent_name: string | null;
+    commission_agent_name_ur: string | null;
     item_id: number;
     item_name: string | null;
     item_name_ur: string | null;
@@ -59,6 +73,8 @@ interface PurchaseRow {
     amount: number;
     paid_amount: number;
     remaining_amount: number;
+    commission_percent: number | null;
+    commission_amount: number;
     notes: string | null;
 }
 
@@ -75,6 +91,7 @@ interface Props {
     farmers: FarmerOption[];
     marks: MarkOption[];
     items: ItemOption[];
+    commissionAgents: CommissionAgentOption[];
     purchases: PurchaseRow[];
     outstanding: OutstandingRow[];
     availableStock: Record<string, number>;
@@ -85,6 +102,7 @@ export default function FarmerPurchasesIndex({
     farmers,
     marks,
     items,
+    commissionAgents = [],
     purchases,
     outstanding,
     availableStock,
@@ -98,12 +116,14 @@ export default function FarmerPurchasesIndex({
         date: date,
         farmer_id: '',
         farmer_mark_id: '',
+        commission_agent_id: '',
         item_id: '',
         nag: '',
         weight: '',
         rate: '',
         charges: '0',
         paid_amount: '0',
+        commission_percent: '',
         notes: '',
     });
 
@@ -113,6 +133,39 @@ export default function FarmerPurchasesIndex({
         amount: '',
         notes: '',
     });
+
+    const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+    const [receiptModalData, setReceiptModalData] = useState<ReceiptData | null>(null);
+
+    const openPrintForPurchase = (purchase: PurchaseRow) => {
+        setReceiptModalData({
+            receiptType: 'farmer_purchase',
+            titleEn: 'Farmer Arrival / Purchase Receipt',
+            titleUr: 'رسید مال آمد و خریداری زمیندار',
+            receiptNo: purchase.reference,
+            date: purchase.date,
+            partyName: isUrdu ? purchase.farmer_name_ur || purchase.farmer_name : purchase.farmer_name,
+            partyCode: String(purchase.farmer_code),
+            partyType: isUrdu ? 'زمیندار' : 'Farmer',
+            partyArea: purchase.mark_name ? `Mark: ${purchase.mark_name}` : undefined,
+            items: [
+                {
+                    description: isUrdu ? purchase.item_name_ur || purchase.item_name : purchase.item_name,
+                    nag: purchase.nag,
+                    weight: purchase.weight,
+                    rate: purchase.rate,
+                    amount: purchase.amount,
+                },
+            ],
+            subtotal: purchase.amount,
+            commission: purchase.commission_amount,
+            totalAmount: purchase.amount,
+            paidAmount: purchase.paid_amount,
+            remainingBalance: purchase.remaining_amount,
+            notes: purchase.notes ?? undefined,
+        });
+        setReceiptModalOpen(true);
+    };
 
     // Only the marks of the selected farmer can be picked.
     const farmerMarks = useMemo(
@@ -127,6 +180,23 @@ export default function FarmerPurchasesIndex({
     const paid = Number(data.paid_amount) || 0;
     const remaining = Math.round((amount - paid) * 100) / 100;
 
+    const commissionPercent = data.commission_percent !== '' ? Number(data.commission_percent) || 0 : 0;
+    const commissionAmount = data.commission_agent_id
+        ? Math.round((amount * commissionPercent) / 100 * 100) / 100
+        : 0;
+
+    const handleAgentChange = (value: string) => {
+        const agentId = value === 'none' ? '' : value;
+        const agent = commissionAgents.find((a) => String(a.id) === agentId);
+        setData((prev) => ({
+            ...prev,
+            commission_agent_id: agentId,
+            commission_percent: agent && agent.commission_percent !== null && agent.commission_percent !== undefined
+                ? String(agent.commission_percent)
+                : (agentId ? prev.commission_percent : ''),
+        }));
+    };
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: t('nav.dashboard'), href: '/dashboard' },
         { title: t('nav.farmer_side'), href: '/register-consignment' },
@@ -139,12 +209,14 @@ export default function FarmerPurchasesIndex({
             date: date,
             farmer_id: '',
             farmer_mark_id: '',
+            commission_agent_id: '',
             item_id: '',
             nag: '',
             weight: '',
             rate: '',
             charges: '0',
             paid_amount: '0',
+            commission_percent: '',
             notes: '',
         });
         setEditingId(null);
@@ -156,12 +228,16 @@ export default function FarmerPurchasesIndex({
             date: purchase.date,
             farmer_id: String(purchase.farmer_id),
             farmer_mark_id: '',
+            commission_agent_id: purchase.commission_agent_id ? String(purchase.commission_agent_id) : '',
             item_id: String(purchase.item_id),
             nag: String(purchase.nag),
             weight: String(purchase.weight),
             rate: String(purchase.rate),
             charges: String(purchase.charges),
             paid_amount: String(purchase.paid_amount),
+            commission_percent: purchase.commission_percent !== null && purchase.commission_percent !== undefined
+                ? String(purchase.commission_percent)
+                : '',
             notes: purchase.notes ?? '',
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -170,11 +246,43 @@ export default function FarmerPurchasesIndex({
     function submit(e: React.FormEvent) {
         e.preventDefault();
 
+        const selectedFarmer = farmers.find((f) => String(f.id) === String(data.farmer_id));
+        const selectedItemObj = items.find((i) => String(i.id) === String(data.item_id));
+
+        const receiptPreview: ReceiptData = {
+            receiptType: 'farmer_purchase',
+            titleEn: 'Farmer Arrival / Purchase Receipt',
+            titleUr: 'رسید مال آمد و خریداری زمیندار',
+            receiptNo: `PUR-${Date.now().toString().slice(-6)}`,
+            date: data.date,
+            partyName: selectedFarmer ? (isUrdu ? selectedFarmer.name_ur || selectedFarmer.name_en : selectedFarmer.name_en) : 'Farmer',
+            partyCode: selectedFarmer ? String(selectedFarmer.code) : undefined,
+            partyType: isUrdu ? 'زمیندار' : 'Farmer',
+            partyArea: selectedFarmer?.area ?? undefined,
+            items: [
+                {
+                    description: selectedItemObj ? (isUrdu ? selectedItemObj.name_ur || selectedItemObj.name_en : selectedItemObj.name_en) : 'Vegetable Item',
+                    nag: data.nag,
+                    weight: data.weight,
+                    rate: data.rate,
+                    amount: amount,
+                },
+            ],
+            subtotal: amount,
+            commission: commissionAmount,
+            totalAmount: amount,
+            paidAmount: paid,
+            remainingBalance: remaining,
+            notes: data.notes || undefined,
+        };
+
         if (editingId) {
             put(route('farmers.purchases.update', editingId), {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success(t('farmers.purchase_updated'));
+                    setReceiptModalData(receiptPreview);
+                    setReceiptModalOpen(true);
                     resetForm();
                 },
                 onError: () => toast.error(t('common.error')),
@@ -187,6 +295,8 @@ export default function FarmerPurchasesIndex({
             preserveScroll: true,
             onSuccess: () => {
                 toast.success(t('farmers.purchase_saved'));
+                setReceiptModalData(receiptPreview);
+                setReceiptModalOpen(true);
                 resetForm();
             },
             onError: () => toast.error(t('common.error')),
@@ -213,10 +323,29 @@ export default function FarmerPurchasesIndex({
     function submitPayment(e: React.FormEvent) {
         e.preventDefault();
 
+        const pmtFarmer = farmers.find((f) => String(f.id) === String(payment.farmer_id));
+        const pmtAmount = Number(payment.amount) || 0;
+        const pmtReceipt: ReceiptData = {
+            receiptType: 'party_payment',
+            titleEn: 'Farmer Cash Payment Voucher',
+            titleUr: 'واؤچر نقد ادائیگی زمیندار',
+            receiptNo: `PMT-${Date.now().toString().slice(-6)}`,
+            date: payment.date,
+            partyName: pmtFarmer ? (isUrdu ? pmtFarmer.name_ur || pmtFarmer.name_en : pmtFarmer.name_en) : 'Farmer',
+            partyCode: pmtFarmer ? String(pmtFarmer.code) : undefined,
+            partyType: isUrdu ? 'زمیندار' : 'Farmer',
+            partyArea: pmtFarmer?.area ?? undefined,
+            totalAmount: pmtAmount,
+            paidAmount: pmtAmount,
+            notes: payment.notes || undefined,
+        };
+
         postPayment(route('farmers.payments.store'), {
             preserveScroll: true,
             onSuccess: () => {
                 toast.success(t('farmers.payment_saved'));
+                setReceiptModalData(pmtReceipt);
+                setReceiptModalOpen(true);
                 setPayment({ farmer_id: '', date: payment.date, amount: '', notes: '' });
             },
             onError: () => toast.error(t('common.error')),
@@ -306,6 +435,54 @@ export default function FarmerPurchasesIndex({
                                             <span className="text-xs text-destructive">{errors.farmer_mark_id}</span>
                                         )}
                                     </div>
+
+                                    <div className="grid gap-1.5">
+                                        <Label htmlFor="commission_agent_id">{t('farmers.commission_agent')}</Label>
+                                        <Select
+                                            value={data.commission_agent_id ? String(data.commission_agent_id) : 'none'}
+                                            onValueChange={handleAgentChange}
+                                        >
+                                            <SelectTrigger id="commission_agent_id">
+                                                <SelectValue placeholder={t('farmers.select_commission_agent')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="none">
+                                                    {t('farmers.no_commission_agent')}
+                                                </SelectItem>
+                                                {commissionAgents.map((agent) => (
+                                                    <SelectItem key={agent.id} value={String(agent.id)}>
+                                                        {agent.code} - {isUrdu ? agent.name_ur : agent.name_en}
+                                                        {agent.commission_percent !== null && agent.commission_percent !== undefined
+                                                            ? ` (${agent.commission_percent}%)`
+                                                            : ''}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.commission_agent_id && (
+                                            <span className="text-xs text-destructive">{errors.commission_agent_id}</span>
+                                        )}
+                                    </div>
+
+                                    {data.commission_agent_id && (
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="commission_percent">{t('farmers.commission_percent')}</Label>
+                                            <Input
+                                                id="commission_percent"
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                step="0.01"
+                                                dir="ltr"
+                                                value={data.commission_percent}
+                                                onChange={(e) => setData('commission_percent', e.target.value)}
+                                                placeholder="0.00"
+                                            />
+                                            {errors.commission_percent && (
+                                                <span className="text-xs text-destructive">{errors.commission_percent}</span>
+                                            )}
+                                        </div>
+                                    )}
 
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="item_id">{t('farmers.item')}</Label>
@@ -451,6 +628,22 @@ export default function FarmerPurchasesIndex({
                                         </span>
                                         <span className="font-bold">Rs. {remaining.toLocaleString()}</span>
                                     </div>
+                                    {data.commission_agent_id && (
+                                        <div className="mt-2 flex flex-wrap items-center gap-3 text-sm font-mono text-blue-900 border-t border-green-200 pt-2">
+                                            <span className="font-sans text-xs font-semibold uppercase text-blue-800">
+                                                {t('farmers.commission_amount')}:
+                                            </span>
+                                            <span>
+                                                Rs. {amount.toLocaleString()} × {commissionPercent}% =
+                                            </span>
+                                            <span className="font-bold text-blue-950">
+                                                Rs. {commissionAmount.toLocaleString()}
+                                            </span>
+                                            <span className="text-xs text-muted-foreground font-sans">
+                                                ({t('parties.direction_jama')})
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex gap-2">
@@ -580,11 +773,13 @@ export default function FarmerPurchasesIndex({
                                         <TableHead>{t('common.date')}</TableHead>
                                         <TableHead>{t('farmers.reference')}</TableHead>
                                         <TableHead>{t('farmers.farmer')}</TableHead>
+                                        <TableHead>{t('parties.commission_agent')}</TableHead>
                                         <TableHead>{t('farmers.item')}</TableHead>
                                         <TableHead className="text-end">{t('farmers.bags')}</TableHead>
                                         <TableHead className="text-end">{t('farmers.weight')}</TableHead>
                                         <TableHead className="text-end">{t('farmers.purchase_rate')}</TableHead>
                                         <TableHead className="text-end">{t('farmers.amount')}</TableHead>
+                                        <TableHead className="text-end">{t('farmers.commission_amount')}</TableHead>
                                         <TableHead className="text-end">{t('farmers.paid_amount')}</TableHead>
                                         <TableHead className="text-end">{t('farmers.remaining')}</TableHead>
                                         <TableHead>{t('common.actions')}</TableHead>
@@ -593,7 +788,7 @@ export default function FarmerPurchasesIndex({
                                 <TableBody>
                                     {purchases.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={11} className="text-center text-muted-foreground">
+                                            <TableCell colSpan={13} className="text-center text-muted-foreground">
                                                 {t('common.no_records')}
                                             </TableCell>
                                         </TableRow>
@@ -606,6 +801,16 @@ export default function FarmerPurchasesIndex({
                                                     {purchase.farmer_code} -{' '}
                                                     {isUrdu ? purchase.farmer_name_ur : purchase.farmer_name}
                                                     {purchase.mark_name ? ` (${purchase.mark_name})` : ''}
+                                                </TableCell>
+                                                <TableCell className="text-xs">
+                                                    {purchase.commission_agent_id ? (
+                                                        <span className="text-emerald-950 font-medium">
+                                                            {purchase.commission_agent_code} -{' '}
+                                                            {isUrdu ? purchase.commission_agent_name_ur : purchase.commission_agent_name}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">-</span>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell className="text-xs">
                                                     {isUrdu ? purchase.item_name_ur : purchase.item_name}
@@ -621,6 +826,18 @@ export default function FarmerPurchasesIndex({
                                                     {purchase.amount.toLocaleString()}
                                                 </TableCell>
                                                 <TableCell className="text-end font-mono text-xs">
+                                                    {purchase.commission_agent_id && purchase.commission_amount > 0 ? (
+                                                        <span className="text-emerald-900 font-semibold" title={`${purchase.commission_percent}%`}>
+                                                            {purchase.commission_amount.toLocaleString()}
+                                                            <span className="text-[10px] text-muted-foreground font-sans block">
+                                                                ({purchase.commission_percent}%)
+                                                            </span>
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">-</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="text-end font-mono text-xs">
                                                     {purchase.paid_amount.toLocaleString()}
                                                 </TableCell>
                                                 <TableCell className="text-end font-mono text-xs font-semibold text-red-700">
@@ -628,6 +845,16 @@ export default function FarmerPurchasesIndex({
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex gap-1">
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="size-7 cursor-pointer text-muted-foreground hover:text-emerald-700"
+                                                            onClick={() => openPrintForPurchase(purchase)}
+                                                            title={t('common.print', 'Print Receipt')}
+                                                        >
+                                                            <Icon name="PrinterIcon" className="size-3.5" />
+                                                        </Button>
                                                         <Button
                                                             type="button"
                                                             variant="ghost"
@@ -659,6 +886,12 @@ export default function FarmerPurchasesIndex({
                     </CardContent>
                 </Card>
             </div>
+
+            <ReceiptModal
+                open={receiptModalOpen}
+                onOpenChange={setReceiptModalOpen}
+                data={receiptModalData}
+            />
         </AppLayout>
     );
 }
