@@ -5,7 +5,6 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
@@ -65,6 +64,16 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
         router.get('/naqdi', { date: newDate }, { preserveState: true, replace: true });
     }
 
+    function setQuickDate(offsetDays: number) {
+        const target = new Date();
+        target.setDate(target.getDate() + offsetDays);
+        const yyyy = target.getFullYear();
+        const mm = String(target.getMonth() + 1).padStart(2, '0');
+        const dd = String(target.getDate()).padStart(2, '0');
+        const str = `${yyyy}-${mm}-${dd}`;
+        handleDateChange(str);
+    }
+
     function handleAmountChange(merchantId: number, val: string) {
         setEditedAmounts(prev => ({
             ...prev,
@@ -111,197 +120,179 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('naqdi.title')} />
 
-            <div className="p-3 space-y-3 pb-24" dir={isUrdu ? 'rtl' : 'ltr'}>
-                {/* Header */}
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2">
-                    <div>
-                        <h1 className="text-xl font-bold text-emerald-800 flex items-center gap-2">
-                            <Icon name="Coins" className="w-5 h-5 text-emerald-700" />
-                            {t('naqdi.title')}
-                        </h1>
-                        <p className="text-xs text-muted-foreground">{t('branding.name')}</p>
-                    </div>
+            <div className="-mt-3 md:-mt-6 -mx-3 md:-mx-6 pb-24 bg-[#eef2ee] min-h-screen" dir={isUrdu ? 'rtl' : 'ltr'}>
+                {/* 1. Dark Green Top Header Banner */}
+                <div className="bg-[#14532d] px-4 md:px-8 pt-6 pb-16 md:pb-20 text-white shadow-sm">
+                    <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h1 className={`text-2xl md:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                <Icon name="Coins" className="size-7 md:size-8 text-emerald-300" weight="fill" />
+                                {t('naqdi.title')}
+                            </h1>
+                            <p className={`text-emerald-100/80 text-xs md:text-sm font-medium mt-1 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                {t('branding.name')}
+                            </p>
+                        </div>
 
-                    <div className="flex items-center gap-2">
-                        <Label htmlFor="naqdi-date" className="text-xs font-semibold">
-                            {t('common.date')}:
-                        </Label>
-                        <Input
-                            id="naqdi-date"
-                            type="date"
-                            value={selectedDate}
-                            onChange={e => handleDateChange(e.target.value)}
-                            className="w-40 h-8 text-sm font-mono"
-                        />
-                    </div>
-                </div>
-
-                {/* Action Bar (Section 9.2: Top, Previous, Next, Bottom, Refresh, Exit) */}
-                <div className="flex flex-wrap items-center justify-between gap-1 bg-gray-100 p-2 rounded-lg border text-xs">
-                    <div className="flex flex-wrap items-center gap-1">
-                        <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={navTop}>
-                            <Icon name="ChevronsUp" className="w-3.5 h-3.5 me-1" />
-                            {t('common.top')}
-                        </Button>
-                        <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={navPrev}>
-                            <Icon name="ChevronUp" className="w-3.5 h-3.5 me-1" />
-                            {t('common.previous')}
-                        </Button>
-                        <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={navNext}>
-                            <Icon name="ChevronDown" className="w-3.5 h-3.5 me-1" />
-                            {t('common.next')}
-                        </Button>
-                        <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={navBottom}>
-                            <Icon name="ChevronsDown" className="w-3.5 h-3.5 me-1" />
-                            {t('common.bottom')}
-                        </Button>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-xs px-2"
-                            onClick={() => router.get('/naqdi', { date: selectedDate })}
-                        >
-                            <Icon name="RefreshCw" className="w-3.5 h-3.5 me-1" />
-                            {t('common.refresh')}
-                        </Button>
-
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-xs px-2 text-red-600 hover:bg-red-50"
-                            onClick={() => router.visit('/dashboard')}
-                        >
-                            <Icon name="LogOut" className="w-3.5 h-3.5 me-1" />
-                            {t('common.exit')}
-                        </Button>
+                        {/* Date Picker + Quick Buttons */}
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setQuickDate(0)}
+                                className={`h-10 px-5 rounded-xl text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
+                            >
+                                {isUrdu ? 'آج' : 'Today'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setQuickDate(-1)}
+                                className={`h-10 px-5 rounded-xl text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
+                            >
+                                {isUrdu ? 'گزشتہ کل' : 'Yesterday'}
+                            </button>
+                            <div className="relative flex items-center">
+                                <input
+                                    type="date"
+                                    value={selectedDate}
+                                    onChange={e => handleDateChange(e.target.value)}
+                                    className="h-10 w-36 rounded-xl bg-white text-gray-900 font-bold text-sm cursor-pointer shadow-xs px-3 text-center border-0 outline-none"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Table (Section 9.2: code, name, total nag, kham bikri, naqdi wasooli, total baqaya) */}
-                <div className="rounded-lg border overflow-hidden shadow-xs bg-white">
-                    <table className="w-full text-xs">
-                        <thead className="bg-emerald-800 text-white select-none">
-                            <tr>
-                                <th className="p-2.5 text-center w-10">#</th>
-                                <th className="p-2.5 text-start w-20">{t('common.code')}</th>
-                                <th className="p-2.5 text-start">{t('merchants.merchant')}</th>
-                                <th className="p-2.5 text-end w-24">{t('naqdi.total_nag')}</th>
-                                <th className="p-2.5 text-end w-36">{t('naqdi.kham_bikri')}</th>
-                                <th className="p-2.5 text-end w-44">{t('naqdi.naqdi_wasooli')} ({t('common.save')})</th>
-                                <th className="p-2.5 text-end w-36">{t('naqdi.total_baqaya')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {rows.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="p-8 text-center text-muted-foreground text-sm">
-                                        {t('common.no_records')}
-                                    </td>
-                                </tr>
-                            ) : (
-                                rows.map((row, idx) => {
-                                    const isSelected = selectedRowIndex === idx;
-                                    const isNaqdi = Number(row.code) === 1;
-                                    const currentInputVal = editedAmounts[row.merchant_id] ?? (row.naqdi_wasooli > 0 ? String(row.naqdi_wasooli) : '');
-                                    const currentNumVal = parseFloat(currentInputVal) || 0;
-                                    const liveBaqaya = Math.round((row.kham_bikri - currentNumVal) * 100) / 100;
-
-                                    return (
-                                        <tr
-                                            key={row.merchant_id}
-                                            onClick={() => setSelectedRowIndex(idx)}
-                                            className={`transition-colors border-b ${
-                                                isSelected
-                                                    ? 'bg-amber-100/80 font-medium'
-                                                    : idx % 2 === 0
-                                                    ? 'bg-white hover:bg-gray-50'
-                                                    : 'bg-emerald-50/30 hover:bg-emerald-50'
-                                            }`}
-                                        >
-                                            <td className="p-2.5 text-center text-gray-500 font-mono">{idx + 1}</td>
-                                            <td className="p-2.5 font-mono font-bold text-emerald-900">{row.code}</td>
-                                            <td className="p-2.5">
-                                                <span className="font-nastaliq text-sm">
-                                                    {isUrdu ? row.name_ur : row.name_en}
-                                                </span>
-                                                {isNaqdi && (
-                                                    <span className="ms-2 px-1.5 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-sans font-medium">
-                                                        {t('merchants.cash_customer')}
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td className="p-2.5 text-end font-mono font-semibold">{row.total_nag}</td>
-                                            <td className="p-2.5 text-end font-mono font-bold text-gray-800">
-                                                Rs. {Number(row.kham_bikri).toLocaleString()}
-                                            </td>
-                                            <td className="p-2 text-end">
-                                                <div className="flex items-center justify-end gap-1">
-                                                    <Input
-                                                        type="number"
-                                                        step="0.01"
-                                                        min="0"
-                                                        value={currentInputVal}
-                                                        onChange={e => handleAmountChange(row.merchant_id, e.target.value)}
-                                                        onKeyDown={e => {
-                                                            if (e.key === 'Enter') {
-                                                                e.preventDefault();
-                                                                saveCashReceipt(row.merchant_id);
-                                                            }
-                                                        }}
-                                                        className="h-8 w-28 text-end font-mono text-xs font-semibold"
-                                                        placeholder="0.00"
-                                                    />
-                                                    <Button
-                                                        size="sm"
-                                                        className="h-8 px-2 bg-emerald-700 hover:bg-emerald-800 text-white"
-                                                        disabled={savingId === row.merchant_id}
-                                                        onClick={() => saveCashReceipt(row.merchant_id)}
-                                                    >
-                                                        <Icon name="Check" className="w-3.5 h-3.5" />
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                            <td className="p-2.5 text-end font-mono font-bold text-emerald-900">
-                                                Rs. {liveBaqaya.toLocaleString()}
+                {/* Content Container (Floating over header) */}
+                <div className="max-w-7xl mx-auto px-3 md:px-6 -mt-10 md:-mt-12 space-y-4">
+                    {/* Table Card */}
+                    <div className="rounded-3xl border border-gray-100 overflow-hidden shadow-md bg-white">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-xs">
+                                <thead className="bg-[#14532d] text-white select-none">
+                                    <tr>
+                                        <th className="p-3 text-center w-12 font-bold">#</th>
+                                        <th className="p-3 text-start w-20 font-bold">{t('common.code')}</th>
+                                        <th className="p-3 text-start font-bold">{t('merchants.merchant')}</th>
+                                        <th className="p-3 text-end w-24 font-bold">{t('naqdi.total_nag')}</th>
+                                        <th className="p-3 text-end w-36 font-bold">{t('naqdi.kham_bikri')}</th>
+                                        <th className="p-3 text-end w-48 font-bold">{t('naqdi.naqdi_wasooli')} ({t('common.save')})</th>
+                                        <th className="p-3 text-end w-36 font-bold">{t('naqdi.total_baqaya')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {rows.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={7} className="p-12 text-center text-muted-foreground text-sm">
+                                                {t('common.no_records')}
                                             </td>
                                         </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
+                                    ) : (
+                                        rows.map((row, idx) => {
+                                            const isSelected = selectedRowIndex === idx;
+                                            const isNaqdi = Number(row.code) === 1;
+                                            const currentInputVal = editedAmounts[row.merchant_id] ?? (row.naqdi_wasooli > 0 ? String(row.naqdi_wasooli) : '');
+                                            const currentNumVal = parseFloat(currentInputVal) || 0;
+                                            const liveBaqaya = Math.round((row.kham_bikri - currentNumVal) * 100) / 100;
+
+                                            return (
+                                                <tr
+                                                    key={row.merchant_id}
+                                                    onClick={() => setSelectedRowIndex(idx)}
+                                                    className={`transition-colors cursor-pointer ${
+                                                        isSelected
+                                                            ? 'bg-amber-100/90 font-medium'
+                                                            : idx % 2 === 0
+                                                            ? 'bg-white hover:bg-emerald-50/40'
+                                                            : 'bg-[#f8fbf9] hover:bg-emerald-50/40'
+                                                    }`}
+                                                >
+                                                    <td className="p-3 text-center text-gray-500 font-mono text-xs">{idx + 1}</td>
+                                                    <td className="p-3">
+                                                        <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded-lg text-xs">
+                                                            #{row.code}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-3">
+                                                        <span className={`font-semibold text-gray-900 text-sm ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                            {isUrdu ? (row.name_ur || row.name_en) : (row.name_en || row.name_ur)}
+                                                        </span>
+                                                        {isNaqdi && (
+                                                            <span className="ms-2 px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-sans font-medium">
+                                                                {t('merchants.cash_customer')}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-3 text-end font-mono font-bold text-gray-800">{row.total_nag}</td>
+                                                    <td className="p-3 text-end font-mono font-bold text-gray-900">
+                                                        Rs. {Number(row.kham_bikri).toLocaleString()}
+                                                    </td>
+                                                    <td className="p-2 text-end" onClick={e => e.stopPropagation()}>
+                                                        <div className="flex items-center justify-end gap-1.5">
+                                                            <Input
+                                                                type="number"
+                                                                step="0.01"
+                                                                min="0"
+                                                                value={currentInputVal}
+                                                                onChange={e => handleAmountChange(row.merchant_id, e.target.value)}
+                                                                onKeyDown={e => {
+                                                                    if (e.key === 'Enter') {
+                                                                        e.preventDefault();
+                                                                        saveCashReceipt(row.merchant_id);
+                                                                    }
+                                                                }}
+                                                                className="h-9 w-28 text-end font-mono text-xs font-bold rounded-xl border-gray-200 bg-white focus:border-[#1e713e]"
+                                                                placeholder="0.00"
+                                                            />
+                                                            <Button
+                                                                size="sm"
+                                                                className="h-9 w-9 p-0 rounded-xl bg-[#1e713e] hover:bg-[#165a31] text-white flex items-center justify-center shadow-xs cursor-pointer disabled:opacity-50"
+                                                                disabled={savingId === row.merchant_id}
+                                                                onClick={() => saveCashReceipt(row.merchant_id)}
+                                                            >
+                                                                <Icon name="Check" className="w-4 h-4" weight="bold" />
+                                                            </Button>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-3 text-end font-mono font-black text-[#14532d] text-sm">
+                                                        Rs. {liveBaqaya.toLocaleString()}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Sticky Live Footer (Section 9.2: total kham bikri, total cash received, total baqaya) */}
-                <div className="fixed bottom-0 start-0 end-0 bg-emerald-950 text-white px-4 py-2.5 shadow-lg border-t border-emerald-800 z-30 flex flex-wrap items-center justify-between gap-2 text-xs">
+                {/* 4. Sticky Live Footer */}
+                <div className="fixed bottom-0 start-0 end-0 bg-green-950 text-white px-4 py-2 shadow-xl border-t border-green-700 z-30 flex flex-wrap items-center justify-between gap-2 text-xs">
                     <div className="flex items-center gap-3">
-                        <span className="font-semibold bg-emerald-900 px-3 py-1 rounded">
+                        <span className="font-semibold bg-emerald-800/90 border border-emerald-600 px-3 py-1 rounded-lg text-white">
                             {t('common.record_x_of_y', {
                                 current: selectedRowIndex >= 0 ? selectedRowIndex + 1 : 0,
                                 total: rows.length,
                             })}
                         </span>
                         <span className="text-gray-300">
-                            {t('naqdi.total_nag')}: <strong className="text-white font-mono">{totals.total_nag}</strong>
+                            {t('naqdi.total_nag')}: <strong className="text-white font-mono text-sm">{totals.total_nag}</strong>
                         </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4 font-mono text-sm">
-                        <div className="bg-emerald-900/90 px-3 py-1 rounded">
-                            <span className="text-emerald-300 text-xs font-sans me-1">{t('naqdi.kham_bikri')}:</span>
+                    <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+                        <div className="bg-emerald-800/90 border border-emerald-600 px-3 py-1 rounded-lg flex items-center gap-1">
+                            <span className="text-emerald-200 font-semibold font-sans">{t('naqdi.kham_bikri')}:</span>
                             <span className="font-bold text-white">Rs. {Number(totals.total_kham_bikri).toLocaleString()}</span>
                         </div>
 
-                        <div className="bg-emerald-800 px-3 py-1 rounded">
-                            <span className="text-emerald-200 text-xs font-sans me-1">{t('naqdi.naqdi_wasooli')}:</span>
-                            <span className="font-bold text-emerald-100">Rs. {Number(totals.total_cash_received).toLocaleString()}</span>
+                        <div className="bg-blue-900/90 border border-blue-600 px-3 py-1 rounded-lg flex items-center gap-1">
+                            <span className="text-blue-200 font-semibold font-sans">{t('naqdi.naqdi_wasooli')}:</span>
+                            <span className="font-bold text-blue-100">Rs. {Number(totals.total_cash_received).toLocaleString()}</span>
                         </div>
 
-                        <div className="bg-amber-700 px-3 py-1 rounded font-bold text-white shadow-xs">
-                            <span className="text-amber-100 text-xs font-sans me-1">{t('naqdi.total_baqaya')}:</span>
+                        <div className="bg-amber-600 px-3.5 py-1 rounded-lg font-bold text-white shadow-xs flex items-center gap-1">
+                            <span className="text-amber-100 font-sans">{t('naqdi.total_baqaya')}:</span>
                             <span>Rs. {Number(totals.total_baqaya).toLocaleString()}</span>
                         </div>
                     </div>

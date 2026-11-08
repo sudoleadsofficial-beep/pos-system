@@ -200,6 +200,62 @@ export default function AmrozaIndex({
         return items.slice(0, 6);
     }, [topItems, items]);
 
+    // Buyer searchable input state
+    const [buyerSearchQuery, setBuyerSearchQuery] = useState('');
+    const [buyerDropdownOpen, setBuyerDropdownOpen] = useState(false);
+    const buyerContainerRef = useRef<HTMLDivElement>(null);
+    const buyerInputRef = useRef<HTMLInputElement>(null);
+
+    // Sync search query when currentMerchant changes externally (e.g. edit mode)
+    useEffect(() => {
+        if (currentMerchant) {
+            setBuyerSearchQuery(String(currentMerchant.code));
+        } else if (!data.merchant_id) {
+            setBuyerSearchQuery('');
+        }
+    }, [data.merchant_id, currentMerchant]);
+
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (buyerContainerRef.current && !buyerContainerRef.current.contains(e.target as Node)) {
+                setBuyerDropdownOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const filteredMerchants = useMemo(() => {
+        if (!buyerSearchQuery.trim()) return merchants.slice(0, 30);
+        const q = buyerSearchQuery.toLowerCase().trim();
+        return merchants.filter(m =>
+            String(m.code).includes(q) ||
+            (m.name_en && m.name_en.toLowerCase().includes(q)) ||
+            (m.name_ur && m.name_ur.includes(q))
+        ).slice(0, 30);
+    }, [merchants, buyerSearchQuery]);
+
+    function handleSelectBuyer(m: MerchantOption) {
+        setData(d => ({
+            ...d,
+            merchant_id: String(m.id),
+            merchant_code: String(m.code),
+        }));
+        setBuyerSearchQuery(String(m.code));
+        setBuyerDropdownOpen(false);
+        nagRef.current?.focus();
+    }
+
+    const missingFields = useMemo(() => {
+        const list: string[] = [];
+        if (!data.payment_type) list.push(isUrdu ? 'ادائیگی' : 'Payment');
+        if (!data.merchant_id) list.push(isUrdu ? 'خریدار' : 'Buyer');
+        if (!data.item_id) list.push(isUrdu ? 'مال' : 'Item');
+        if (numNag <= 0) list.push(isUrdu ? 'تعداد' : 'Units');
+        if (numRate <= 0) list.push(isUrdu ? 'ریٹ' : 'Rate');
+        return list;
+    }, [data.payment_type, data.merchant_id, data.item_id, numNag, numRate, isUrdu]);
+
     // Keyboard shortcuts: F1 = Cash, F2 = Credit
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -329,7 +385,6 @@ export default function AmrozaIndex({
     function executeSave() {
         setAnomalyConfirmOpen(false);
 
-        const currentPaymentType = data.payment_type;
         const currentDate = data.date;
 
         if (editingSale) {
@@ -338,7 +393,7 @@ export default function AmrozaIndex({
                 onSuccess: () => {
                     toast.success(isUrdu ? 'ریکارڈ کامیابی سے تبدیل ہو گیا!' : 'Saved successfully!');
                     setEditingSale(null);
-                    resetForm(currentPaymentType, currentDate);
+                    resetForm('', currentDate);
                 },
             });
         } else {
@@ -346,13 +401,13 @@ export default function AmrozaIndex({
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success(isUrdu ? 'نیا اندراج شامل ہو گیا!' : 'Added successfully!');
-                    resetForm(currentPaymentType, currentDate);
+                    resetForm('', currentDate);
                 },
             });
         }
     }
 
-    function resetForm(keepPaymentType = data.payment_type, keepDate = selectedDate) {
+    function resetForm(keepPaymentType: '' | 'naqdi' | 'udhaar' = '', keepDate = selectedDate) {
         setData({
             date: keepDate,
             merchant_id: '',
@@ -364,12 +419,18 @@ export default function AmrozaIndex({
             bardana: '0',
             payment_type: keepPaymentType,
         });
+        setBuyerSearchQuery('');
+        setBuyerDropdownOpen(false);
         setEditingSale(null);
 
-        setTimeout(() => {
-            const input = stepBuyerRef.current?.querySelector('input');
-            if (input) input.focus();
-        }, 100);
+        if (keepPaymentType) {
+            setTimeout(() => {
+                const input = stepBuyerRef.current?.querySelector('input');
+                if (input) input.focus();
+            }, 100);
+        } else {
+            stepPaymentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
     }
 
     function startEdit(sale: Sale) {
@@ -386,6 +447,9 @@ export default function AmrozaIndex({
             bardana: String(sale.bardana || '0'),
             payment_type: pType,
         });
+        if (sale.merchant) {
+            setBuyerSearchQuery(String(sale.merchant.code));
+        }
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -514,464 +578,410 @@ Thank you!`;
                 }
             `}</style>
 
-            <div className="p-2.5 md:p-3 space-y-3 pb-24 max-w-7xl mx-auto" dir={isUrdu ? 'rtl' : 'ltr'}>
-                {/* 1. Header */}
-                <div className="bg-white rounded-lg p-2.5 md:p-3 border border-green-200 shadow-xs flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                        <span className="p-1.5 bg-green-700 text-white rounded-md shadow-xs">
-                            <Icon name="Receipt" className="size-4" />
-                        </span>
+            <div className="-mt-3 md:-mt-6 -mx-3 md:-mx-6 pb-24 bg-[#eef2ee] min-h-screen" dir={isUrdu ? 'rtl' : 'ltr'}>
+                {/* 1. Dark Green Top Header Banner */}
+                <div className="bg-[#14532d] px-4 md:px-8 pt-6 pb-16 md:pb-20 text-white shadow-sm">
+                    <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <h1 className={`text-base md:text-lg font-bold text-green-900 leading-tight ${isUrdu ? 'font-nastaliq' : ''}`}>
+                            <h1 className={`text-2xl md:text-3xl font-extrabold text-white tracking-tight ${isUrdu ? 'font-nastaliq' : ''}`}>
                                 {isUrdu ? 'آج کی بکری (امروزہ)' : "Today's Sales"}
                             </h1>
-                            <span className="text-[11px] text-muted-foreground">
-                                {isUrdu ? 'مرحلہ وار درست اندراج' : "Step-by-step guided sales entry"}
-                            </span>
+                            <p className={`text-emerald-100/80 text-xs md:text-sm font-medium mt-1 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                {isUrdu ? 'آج کی سیل اینٹری · امروزہ' : 'Aaj ki sale entry · Amroza'}
+                            </p>
                         </div>
-                    </div>
 
-                    {/* Date Picker + Quick Buttons */}
-                    <div className="flex items-center gap-1.5 bg-green-50/80 p-1 rounded-md border border-green-300">
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setQuickDate(0)}
-                            className={`h-7 px-2 text-xs bg-white text-green-900 hover:bg-green-100 ${isUrdu ? 'font-nastaliq' : ''}`}
-                        >
-                            {isUrdu ? 'آج' : 'Today'}
-                        </Button>
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setQuickDate(-1)}
-                            className={`h-7 px-2 text-xs bg-white text-green-900 hover:bg-green-100 ${isUrdu ? 'font-nastaliq' : ''}`}
-                        >
-                            {isUrdu ? 'گزشتہ کل' : 'Yesterday'}
-                        </Button>
-                        <div className="relative flex items-center">
-                            <Input
-                                type="date"
-                                value={selectedDate}
-                                onChange={e => handleDateChange(e.target.value)}
-                                className="h-7 w-36 text-xs font-mono font-bold bg-white ps-2 pe-7 border-green-400 cursor-pointer"
-                            />
-                            <Icon name="CalendarDots" className="size-4 text-green-700 absolute end-2 pointer-events-none" weight="bold" />
+                        {/* Date Picker + Quick Buttons */}
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setQuickDate(0)}
+                                className={`h-10 px-5 rounded-xl text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
+                            >
+                                {isUrdu ? 'آج' : 'Today'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setQuickDate(-1)}
+                                className={`h-10 px-5 rounded-xl text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
+                            >
+                                {isUrdu ? 'گزشتہ کل' : 'Yesterday'}
+                            </button>
+                            <div className="relative flex items-center">
+                                <input
+                                    type="date"
+                                    value={selectedDate}
+                                    onChange={e => handleDateChange(e.target.value)}
+                                    className="h-10 w-36 rounded-xl bg-white text-gray-900 font-bold text-sm cursor-pointer shadow-xs px-3 text-center border-0 outline-none"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* 2. Step-by-Step Guided Form */}
-                <div className="bg-white border border-gray-200 rounded-xl p-3 md:p-4 shadow-sm relative">
-                    <form onSubmit={attemptSubmit} className="space-y-0">
+                {/* Form & Records Container */}
+                <div className="max-w-7xl mx-auto px-3 md:px-6 -mt-10 md:-mt-12 space-y-6">
+                    {/* 2. Main Entry Form & Bill Preview Grid */}
+                    <form onSubmit={attemptSubmit}>
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                            
+                            {/* LEFT CARD: Form Entry */}
+                            <div className="lg:col-span-7 bg-white rounded-3xl p-6 md:p-7 border border-gray-100 shadow-md space-y-5">
+                                
+                                {/* 1. PAYMENT TYPE */}
+                                <div ref={stepPaymentRef} className={`transition-all ${flashingStep === 'payment' ? 'shake-error rounded-2xl p-2 bg-red-50/80' : ''}`}>
+                                    <div className="flex items-center gap-2 mb-2.5">
+                                        <span className="w-5 h-5 rounded-full bg-[#1e713e] text-white text-[11px] font-bold flex items-center justify-center shrink-0">1</span>
+                                        <label className={`text-xs font-bold text-gray-700 uppercase tracking-wider ${isUrdu ? 'font-nastaliq text-sm' : ''}`}>
+                                            {isUrdu ? 'ادائیگی کا طریقہ (PAYMENT TYPE)' : 'PAYMENT TYPE'}
+                                        </label>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSelectPayment('naqdi')}
+                                            className={`h-14 rounded-2xl font-bold flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                                                data.payment_type === 'naqdi'
+                                                    ? 'bg-[#1e713e] text-white shadow-md'
+                                                    : 'bg-white text-gray-800 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
+                                            }`}
+                                        >
+                                            <Icon name="Money" className="size-5" weight={data.payment_type === 'naqdi' ? 'fill' : 'regular'} />
+                                            <span className="text-sm md:text-base">{isUrdu ? 'نقد (Cash)' : 'Cash'}</span>
+                                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md ${data.payment_type === 'naqdi' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>F1</span>
+                                        </button>
 
-                        {/* STEP 1: Payment Type */}
-                        <div
-                            ref={stepPaymentRef}
-                            className={`relative py-3 transition-all ${
-                                flashingStep === 'payment' ? 'shake-error rounded-lg bg-red-50/80 px-3' : ''
-                            }`}
-                        >
-                            <div className="flex flex-wrap items-center justify-between gap-3 relative">
-                                <div className="flex items-center gap-2 relative">
-                                    <label className={`text-sm font-semibold text-gray-800 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                        {isUrdu ? 'ادائیگی کا طریقہ' : 'Payment Type'} <span className="text-red-500">*</span>
-                                    </label>
-                                    <span className="text-[10px] text-gray-400 font-mono">(F1 / F2)</span>
-
-                                    {activeTooltipStep === 'payment' && (
-                                        <div className="absolute -top-7 start-28 ide-tooltip-popup animate-in fade-in duration-100 flex items-center gap-1">
-                                            <span className={isUrdu ? 'font-nastaliq' : ''}>
-                                                {isUrdu ? 'پہلے ادائیگی کی قسم چنیں' : 'First select the payment type'}
-                                            </span>
-                                        </div>
-                                    )}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSelectPayment('udhaar')}
+                                            className={`h-14 rounded-2xl font-bold flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                                                data.payment_type === 'udhaar'
+                                                    ? 'bg-[#1e713e] text-white shadow-md'
+                                                    : 'bg-white text-gray-800 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
+                                            }`}
+                                        >
+                                            <Icon name="CreditCard" className="size-5" weight={data.payment_type === 'udhaar' ? 'fill' : 'regular'} />
+                                            <span className="text-sm md:text-base">{isUrdu ? 'ادھار (Credit)' : 'Credit'}</span>
+                                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md ${data.payment_type === 'udhaar' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>F2</span>
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div className="flex items-center gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleSelectPayment('naqdi')}
-                                        className={`h-11 px-6 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer border-2 ${
-                                            !data.payment_type ? 'pulse-attention' : ''
-                                        } ${
-                                            data.payment_type === 'naqdi'
-                                                ? 'bg-gray-900 text-white border-gray-900'
-                                                : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500'
-                                        }`}
-                                    >
-                                        <span>💵</span>
-                                        <span>{isUrdu ? 'نقد' : 'Cash'}</span>
-                                        <span className="text-[10px] font-mono opacity-60 bg-black/10 px-1.5 py-0.5 rounded">F1</span>
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => handleSelectPayment('udhaar')}
-                                        className={`h-11 px-6 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer border-2 ${
-                                            !data.payment_type ? 'pulse-attention' : ''
-                                        } ${
-                                            data.payment_type === 'udhaar'
-                                                ? 'bg-gray-900 text-white border-gray-900'
-                                                : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500'
-                                        }`}
-                                    >
-                                        <span>📝</span>
-                                        <span>{isUrdu ? 'ادھار' : 'Credit'}</span>
-                                        <span className="text-[10px] font-mono opacity-60 bg-black/10 px-1.5 py-0.5 rounded">F2</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="border-t border-gray-100" />
-
-                        {/* STEP 2: Buyer Selection */}
-                        <div
-                            ref={stepBuyerRef}
-                            className={`relative py-3 transition-all ${
-                                flashingStep === 'buyer' ? 'shake-error rounded-lg bg-red-50/80 px-3' : ''
-                            }`}
-                        >
-                            {!isBuyerUnlocked && (
-                                <div
-                                    onClick={() => triggerLockedFeedback('payment', stepPaymentRef)}
-                                    onMouseEnter={() => showTooltip('buyer-lock')}
-                                    onMouseLeave={() => setActiveTooltipStep(null)}
-                                    className="absolute inset-0 z-20 cursor-not-allowed bg-transparent"
-                                />
-                            )}
-
-                            {activeTooltipStep === 'buyer-lock' && (
-                                <div className="absolute -top-7 start-28 ide-tooltip-popup animate-in fade-in duration-100">
-                                    <span className={isUrdu ? 'font-nastaliq' : ''}>
-                                        {isUrdu ? 'پہلے ادائیگی کی قسم چنیں' : 'First select the payment type'}
-                                    </span>
-                                </div>
-                            )}
-
-                            <div className={!isBuyerUnlocked ? 'step-locked-clean' : ''}>
-                                <label className={`block text-sm font-semibold text-gray-800 mb-2 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                    {isUrdu ? 'خریدار' : 'Buyer'} <span className="text-red-500">*</span>
-                                </label>
-
-                                <div className="flex flex-wrap md:flex-nowrap items-center gap-2">
-                                    <div className="w-full md:w-80">
-                                        <ListPicker
+                                {/* 2. BUYER */}
+                                <div ref={stepBuyerRef} className={`transition-all ${flashingStep === 'buyer' ? 'shake-error rounded-2xl p-2 bg-red-50/80' : ''}`}>
+                                    <div className="flex items-center gap-2 mb-2.5">
+                                        <span className="w-5 h-5 rounded-full bg-[#1e713e] text-white text-[11px] font-bold flex items-center justify-center shrink-0">2</span>
+                                        <label className={`text-xs font-bold text-gray-700 uppercase tracking-wider ${isUrdu ? 'font-nastaliq text-sm' : ''}`}>
+                                            {isUrdu ? 'خریدار (BUYER)' : 'BUYER'}
+                                        </label>
+                                    </div>
+                                    <div ref={buyerContainerRef} className="relative">
+                                        {!isBuyerUnlocked && (
+                                            <div
+                                                onClick={() => triggerLockedFeedback('payment', stepPaymentRef)}
+                                                onMouseEnter={() => showTooltip('payment-lock')}
+                                                onMouseLeave={() => setActiveTooltipStep(null)}
+                                                className="absolute inset-0 z-20 cursor-not-allowed bg-transparent"
+                                            />
+                                        )}
+                                        <Input
+                                            ref={buyerInputRef}
                                             disabled={!isBuyerUnlocked}
-                                            items={merchants}
-                                            selectedId={data.merchant_id ? Number(data.merchant_id) : null}
-                                            onChange={(item: PickerItem | null) => {
-                                                if (item) {
-                                                    setData(d => ({
-                                                        ...d,
-                                                        merchant_id: String(item.id),
-                                                        merchant_code: String(item.code),
-                                                    }));
-                                                    nagRef.current?.focus();
-                                                } else {
+                                            tabIndex={!isBuyerUnlocked ? -1 : 0}
+                                            value={buyerSearchQuery}
+                                            onChange={e => {
+                                                const val = e.target.value;
+                                                setBuyerSearchQuery(val);
+                                                if (isBuyerUnlocked) setBuyerDropdownOpen(true);
+                                                if (!val.trim()) {
                                                     setData(d => ({ ...d, merchant_id: '', merchant_code: '' }));
                                                 }
                                             }}
-                                            placeholder={isUrdu ? "کوڈ..." : "Code..."}
+                                            onFocus={() => {
+                                                if (isBuyerUnlocked) setBuyerDropdownOpen(true);
+                                            }}
+                                            onKeyDown={e => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    const trimmed = buyerSearchQuery.trim();
+                                                    const codeMatch = merchants.find(m => String(m.code) === trimmed);
+                                                    if (codeMatch) {
+                                                        handleSelectBuyer(codeMatch);
+                                                        return;
+                                                    }
+                                                    if (filteredMerchants.length > 0) {
+                                                        handleSelectBuyer(filteredMerchants[0]);
+                                                        return;
+                                                    }
+                                                } else if (e.key === 'Escape') {
+                                                    setBuyerDropdownOpen(false);
+                                                }
+                                            }}
+                                            placeholder={isUrdu ? 'کوڈ یا نام لکھیں...' : 'Code ya naam likhein...'}
+                                            className={`h-14 rounded-2xl border-gray-200 px-4 pe-11 text-sm md:text-base bg-white text-gray-900 placeholder:text-gray-400 focus:border-[#1e713e] shadow-xs ${!isBuyerUnlocked ? 'opacity-40 cursor-not-allowed bg-gray-50' : ''}`}
                                         />
-                                    </div>
+                                        <Icon name="MagnifyingGlass" className="size-5 text-gray-400 absolute end-4 top-1/2 -translate-y-1/2 pointer-events-none" />
 
-                                    {currentMerchant && (
-                                        <div className="flex-1 min-h-[44px] px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-between text-sm">
-                                            <div className="truncate">
+                                        {/* Dropdown list */}
+                                        {isBuyerUnlocked && buyerDropdownOpen && (
+                                            <div className="absolute z-50 start-0 end-0 mt-1 max-h-56 overflow-y-auto bg-white rounded-2xl border border-gray-200 shadow-xl divide-y divide-gray-100">
+                                                {filteredMerchants.length === 0 ? (
+                                                    <div className="p-3 text-xs text-gray-500 text-center">
+                                                        {isUrdu ? 'کوئی خریدار نہیں ملا' : 'No buyer found'}
+                                                    </div>
+                                                ) : (
+                                                    filteredMerchants.map(m => (
+                                                        <button
+                                                            key={m.id}
+                                                            type="button"
+                                                            onMouseDown={(e) => {
+                                                                e.preventDefault();
+                                                                handleSelectBuyer(m);
+                                                            }}
+                                                            className="w-full text-start px-4 py-2.5 text-xs hover:bg-gray-50 flex items-center justify-between gap-2 cursor-pointer transition-colors"
+                                                        >
+                                                            <div className="flex items-center gap-2 truncate">
+                                                                <span className="font-mono font-bold text-gray-900 bg-gray-100 px-1.5 py-0.5 rounded text-xs">
+                                                                    #{m.code}
+                                                                </span>
+                                                                <span className={`font-semibold text-gray-800 truncate ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                                    {isUrdu ? (m.name_ur || m.name_en) : (m.name_en || m.name_ur)}
+                                                                </span>
+                                                            </div>
+                                                            <span className="font-mono text-gray-600 shrink-0 text-xs">
+                                                                Rs. {Number(m.current_balance).toLocaleString()}
+                                                            </span>
+                                                        </button>
+                                                    ))
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {currentMerchant && (
+                                            <div className="mt-1.5 text-xs text-gray-600 flex items-center gap-1.5 px-1">
+                                                <span className="text-[#1e713e] font-bold">✓</span>
                                                 <span className={`font-semibold text-gray-900 ${isUrdu ? 'font-nastaliq' : ''}`}>
                                                     {isUrdu ? (currentMerchant.name_ur || currentMerchant.name_en) : (currentMerchant.name_en || currentMerchant.name_ur)}
                                                 </span>
-                                                <span className="text-xs text-gray-500 ms-1.5 font-mono">
-                                                    (#{currentMerchant.code})
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-1.5 shrink-0 ms-2">
-                                                <span className={`text-gray-500 text-xs ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                    {isUrdu ? 'بقایا:' : 'Balance:'}
-                                                </span>
-                                                <span className={`font-mono font-bold px-2 py-0.5 rounded text-xs ${
-                                                    Number(currentMerchant.current_balance) > 0
-                                                        ? 'bg-amber-100 text-amber-900'
-                                                        : 'bg-green-100 text-green-900'
-                                                }`}>
+                                                <span className="font-mono text-gray-500">(#{currentMerchant.code})</span>
+                                                <span className="text-gray-300">—</span>
+                                                <span className="text-gray-500">{isUrdu ? 'بقایا:' : 'Balance:'}</span>
+                                                <span className="font-mono font-bold text-gray-900">
                                                     Rs. {Number(currentMerchant.current_balance).toLocaleString()}
                                                 </span>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div className="border-t border-gray-100" />
-
-                        {/* STEP 3: Item Selection */}
-                        <div
-                            ref={stepItemRef}
-                            className={`relative py-3 transition-all ${
-                                flashingStep === 'item' ? 'shake-error rounded-lg bg-red-50/80 px-3' : ''
-                            }`}
-                        >
-                            {!isItemUnlocked && (
+                                {/* 3. ITEM */}
                                 <div
-                                    onClick={() => triggerLockedFeedback('buyer', stepBuyerRef)}
-                                    onMouseEnter={() => showTooltip('item-lock')}
-                                    onMouseLeave={() => setActiveTooltipStep(null)}
-                                    className="absolute inset-0 z-20 cursor-not-allowed bg-transparent"
-                                />
-                            )}
+                                    ref={stepItemRef}
+                                    className={`relative transition-all ${
+                                        flashingStep === 'item' ? 'shake-error rounded-2xl p-2 bg-red-50/80' : ''
+                                    }`}
+                                >
+                                    {!isItemUnlocked && (
+                                        <div
+                                            onClick={() => triggerLockedFeedback('buyer', stepBuyerRef)}
+                                            onMouseEnter={() => showTooltip('item-lock')}
+                                            onMouseLeave={() => setActiveTooltipStep(null)}
+                                            className="absolute inset-0 z-20 cursor-not-allowed bg-transparent"
+                                        />
+                                    )}
 
-                            {activeTooltipStep === 'item-lock' && (
-                                <div className="absolute -top-7 start-28 ide-tooltip-popup animate-in fade-in duration-100">
-                                    <span className={isUrdu ? 'font-nastaliq' : ''}>
-                                        {isUrdu ? 'پہلے خریدار چنیں' : 'First select the buyer'}
-                                    </span>
-                                </div>
-                            )}
+                                    <div className="flex items-center gap-2 mb-2.5">
+                                        <span className="w-5 h-5 rounded-full bg-[#1e713e] text-white text-[11px] font-bold flex items-center justify-center shrink-0">3</span>
+                                        <label className={`text-xs font-bold text-gray-700 uppercase tracking-wider ${isUrdu ? 'font-nastaliq text-sm' : ''}`}>
+                                            {isUrdu ? 'مال / آئٹم (ITEM)' : 'ITEM'}
+                                        </label>
+                                    </div>
 
-                            <div className={!isItemUnlocked ? 'step-locked-clean' : ''}>
-                                <label className={`block text-sm font-semibold text-gray-800 mb-2 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                    {isUrdu ? 'مال (آئٹم)' : 'Item'} <span className="text-red-500">*</span>
-                                </label>
+                                    <div className={`grid grid-cols-2 md:grid-cols-3 gap-2.5 ${!isItemUnlocked ? 'opacity-40' : ''}`}>
+                                        {quickItems.map(item => {
+                                            const isSelected = String(data.item_id) === String(item.id);
+                                            const initial = (item.name_en || item.name_ur || 'I')[0].toUpperCase();
+                                            const displayName = isUrdu
+                                                ? (item.name_ur || item.name_en)
+                                                : (item.name_en ? item.name_en.replace(' (Green Chilli)', '').replace(' (Cabbage)', '') : item.name_ur);
 
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-                                    {quickItems.map(item => {
-                                        const isSelected = String(data.item_id) === String(item.id);
-                                        return (
-                                            <button
-                                                key={item.id}
-                                                type="button"
+                                            return (
+                                                <button
+                                                    key={item.id}
+                                                    type="button"
+                                                    disabled={!isItemUnlocked}
+                                                    tabIndex={!isItemUnlocked ? -1 : 0}
+                                                    onClick={() => handleItemSelect(item)}
+                                                    className={`h-14 px-3 rounded-2xl border transition-all flex items-center gap-2.5 cursor-pointer ${
+                                                        isSelected
+                                                            ? 'bg-[#1e713e] text-white border-[#1e713e] shadow-sm font-bold'
+                                                            : 'bg-white text-gray-800 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
+                                                    }`}
+                                                >
+                                                    <span className={`w-7 h-7 rounded-lg text-xs font-black flex items-center justify-center shrink-0 ${
+                                                        isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100/70 text-emerald-800'
+                                                    }`}>
+                                                        {initial}
+                                                    </span>
+                                                    <span className={`text-xs md:text-sm font-semibold truncate ${isUrdu ? 'font-nastaliq font-bold' : ''}`}>
+                                                        {displayName}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {items.length > 6 && (
+                                        <div className="mt-2.5 flex items-center gap-2">
+                                            <span className={`text-xs text-gray-400 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                {isUrdu ? 'دیگر آئٹم:' : 'Other:'}
+                                            </span>
+                                            <select
                                                 disabled={!isItemUnlocked}
                                                 tabIndex={!isItemUnlocked ? -1 : 0}
-                                                onClick={() => handleItemSelect(item)}
-                                                className={`min-h-[44px] px-2 rounded-lg text-center border-2 transition-all flex items-center justify-center cursor-pointer ${
-                                                    isSelected
-                                                        ? 'bg-gray-900 text-white border-gray-900 font-semibold shadow-sm'
-                                                        : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400 hover:bg-gray-50'
-                                                }`}
+                                                value={data.item_id}
+                                                onChange={e => {
+                                                    const it = items.find(i => String(i.id) === e.target.value);
+                                                    if (it) handleItemSelect(it);
+                                                }}
+                                                className={`h-9 text-xs rounded-xl border border-gray-200 bg-white px-2.5 flex-1 max-w-xs text-gray-700 ${isUrdu ? 'font-nastaliq' : ''}`}
                                             >
-                                                <span className={`text-sm truncate ${isUrdu ? 'font-nastaliq font-bold' : 'font-medium'}`}>
-                                                    {isUrdu ? (item.name_ur || item.name_en) : (item.name_en || item.name_ur)}
-                                                </span>
-                                            </button>
-                                        );
-                                    })}
+                                                <option value="">{isUrdu ? 'آئٹم چنیں...' : 'Choose item...'}</option>
+                                                {items.map(it => (
+                                                    <option key={it.id} value={it.id}>
+                                                        {it.code} - {isUrdu ? it.name_ur : it.name_en}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
                                 </div>
 
-                                {items.length > 6 && (
-                                    <div className="mt-2 flex items-center gap-2">
-                                        <span className={`text-xs text-gray-500 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                            {isUrdu ? 'دیگر آئٹم:' : 'Other Items:'}
-                                        </span>
-                                        <select
-                                            disabled={!isItemUnlocked}
-                                            tabIndex={!isItemUnlocked ? -1 : 0}
-                                            value={data.item_id}
-                                            onChange={e => {
-                                                const it = items.find(i => String(i.id) === e.target.value);
-                                                if (it) handleItemSelect(it);
-                                            }}
-                                            className={`h-9 text-sm rounded-lg border border-gray-300 bg-white px-2 flex-1 max-w-xs ${isUrdu ? 'font-nastaliq' : ''}`}
-                                        >
-                                            <option value="">{isUrdu ? 'آئٹم چنیں...' : 'Choose item...'}</option>
-                                            {items.map(it => (
-                                                <option key={it.id} value={it.id}>
-                                                    {it.code} - {isUrdu ? it.name_ur : it.name_en} ({isUrdu ? it.name_en : it.name_ur})
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="border-t border-gray-100" />
-
-                        {/* STEP 4, 5, 6, 7: Units, Weight, Rate, Packing Charges */}
-                        <div className="py-3">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-
-                                {/* STEP 4: Units */}
-                                <div
-                                    ref={stepUnitsRef}
-                                    className={`relative transition-all ${
-                                        flashingStep === 'units' ? 'shake-error rounded-lg bg-red-50/80 p-2' : ''
-                                    }`}
-                                >
+                                {/* 4. QUANTITY */}
+                                <div className="relative">
                                     {!isUnitsUnlocked && (
                                         <div
-                                            onClick={() => triggerLockedFeedback('item', stepItemRef)}
-                                            onMouseEnter={() => showTooltip('units-lock')}
-                                            onMouseLeave={() => setActiveTooltipStep(null)}
+                                            onClick={() => {
+                                                if (!data.payment_type) triggerLockedFeedback('payment', stepPaymentRef);
+                                                else if (!data.merchant_id) triggerLockedFeedback('buyer', stepBuyerRef);
+                                                else if (!data.item_id) triggerLockedFeedback('item', stepItemRef);
+                                            }}
                                             className="absolute inset-0 z-20 cursor-not-allowed bg-transparent"
                                         />
                                     )}
 
-                                    {activeTooltipStep === 'units-lock' && (
-                                        <div className="absolute -top-7 start-2 ide-tooltip-popup animate-in fade-in duration-100">
-                                            <span className={isUrdu ? 'font-nastaliq' : ''}>
-                                                {isUrdu ? 'پہلے مال چنیں' : 'First select an item'}
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    <div className={!isUnitsUnlocked ? 'step-locked-clean' : ''}>
-                                        <label className={`block text-sm font-semibold text-gray-800 mb-1.5 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                            {isUrdu ? 'تعداد *' : 'Units *'}
-                                            <span className="block text-xs font-normal text-gray-400">{isUrdu ? '(بوریاں)' : '(Bags)'}</span>
+                                    <div className="flex items-center gap-2 mb-2.5">
+                                        <span className="w-5 h-5 rounded-full bg-[#1e713e] text-white text-[11px] font-bold flex items-center justify-center shrink-0">4</span>
+                                        <label className={`text-xs font-bold text-gray-700 uppercase tracking-wider ${isUrdu ? 'font-nastaliq text-sm' : ''}`}>
+                                            {isUrdu ? 'مقدار اور ریٹ (QUANTITY)' : 'QUANTITY'}
                                         </label>
-                                        <Input
-                                            ref={nagRef}
-                                            disabled={!isUnitsUnlocked}
-                                            tabIndex={!isUnitsUnlocked ? -1 : 0}
-                                            type="number"
-                                            min="0"
-                                            step="1"
-                                            value={data.nag}
-                                            onChange={e => setData('nag', e.target.value)}
-                                            onKeyDown={e => {
-                                                if (e.key === 'Enter') {
-                                                    e.preventDefault();
-                                                    weightRef.current?.focus();
-                                                }
-                                            }}
-                                            placeholder="0"
-                                            className="h-11 text-base font-mono font-bold text-center bg-white border-gray-300 focus:border-gray-800"
-                                            required
-                                        />
                                     </div>
-                                </div>
 
-                                {/* STEP 5: Weight */}
-                                <div
-                                    ref={stepWeightRef}
-                                    className={`relative transition-all ${
-                                        flashingStep === 'weight' ? 'shake-error rounded-lg bg-red-50/80 p-2' : ''
-                                    }`}
-                                >
-                                    {!isWeightUnlocked && (
+                                    <div className={`grid grid-cols-1 sm:grid-cols-3 gap-3 ${!isUnitsUnlocked ? 'opacity-40' : ''}`}>
+                                        {/* UNITS */}
                                         <div
-                                            onClick={() => triggerLockedFeedback('units', stepUnitsRef)}
-                                            onMouseEnter={() => showTooltip('weight-lock')}
-                                            onMouseLeave={() => setActiveTooltipStep(null)}
-                                            className="absolute inset-0 z-20 cursor-not-allowed bg-transparent"
-                                        />
-                                    )}
-
-                                    {activeTooltipStep === 'weight-lock' && (
-                                        <div className="absolute -top-7 start-2 ide-tooltip-popup animate-in fade-in duration-100">
-                                            <span className={isUrdu ? 'font-nastaliq' : ''}>
-                                                {isUrdu ? 'پہلے نگ لکھیں' : 'First enter the units (Nag)'}
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    <div className={!isWeightUnlocked ? 'step-locked-clean' : ''}>
-                                        <label className={`block text-sm font-semibold text-gray-800 mb-1.5 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                            {isUrdu ? 'وزن' : 'Weight'}
-                                            <span className="block text-xs font-normal text-gray-400">{isUrdu ? '(کلو/من)' : '(Kg/Maund)'}</span>
-                                        </label>
-                                        <Input
-                                            ref={weightRef}
-                                            disabled={!isWeightUnlocked}
-                                            tabIndex={!isWeightUnlocked ? -1 : 0}
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            value={data.weight}
-                                            onChange={e => setData('weight', e.target.value)}
-                                            onKeyDown={e => {
-                                                if (e.key === 'Enter') {
-                                                    e.preventDefault();
-                                                    rateRef.current?.focus();
-                                                }
-                                            }}
-                                            placeholder="0.00"
-                                            className="h-11 text-base font-mono font-bold text-center bg-white border-gray-300 focus:border-gray-800"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* STEP 6: Rate */}
-                                <div
-                                    ref={stepRateRef}
-                                    className={`relative transition-all ${
-                                        flashingStep === 'rate' ? 'shake-error rounded-lg bg-red-50/80 p-2' : ''
-                                    }`}
-                                >
-                                    {!isRateUnlocked && (
-                                        <div
-                                            onClick={() => triggerLockedFeedback('units', stepUnitsRef)}
-                                            onMouseEnter={() => showTooltip('rate-lock')}
-                                            onMouseLeave={() => setActiveTooltipStep(null)}
-                                            className="absolute inset-0 z-20 cursor-not-allowed bg-transparent"
-                                        />
-                                    )}
-
-                                    {activeTooltipStep === 'rate-lock' && (
-                                        <div className="absolute -top-7 start-2 ide-tooltip-popup animate-in fade-in duration-100">
-                                            <span className={isUrdu ? 'font-nastaliq' : ''}>
-                                                {isUrdu ? 'پہلے نگ لکھیں' : 'First enter the units (Nag)'}
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    <div className={!isRateUnlocked ? 'step-locked-clean' : ''}>
-                                        <label className={`block text-sm font-semibold text-gray-800 mb-1.5 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                            {isUrdu ? 'ریٹ *' : 'Rate *'}
-                                            <span className="block text-xs font-normal text-gray-400">{isUrdu ? '(قیمت فی یونٹ)' : '(per unit)'}</span>
-                                        </label>
-                                        <Input
-                                            ref={rateRef}
-                                            disabled={!isRateUnlocked}
-                                            tabIndex={!isRateUnlocked ? -1 : 0}
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            value={data.rate}
-                                            onChange={e => setData('rate', e.target.value)}
-                                            onKeyDown={e => {
-                                                if (e.key === 'Enter') {
-                                                    e.preventDefault();
-                                                    bardanaRef.current?.focus();
-                                                }
-                                            }}
-                                            placeholder="0"
-                                            className={`h-11 text-base font-mono font-bold text-center bg-white border-gray-300 focus:border-gray-800 ${
-                                                isRateUnusual ? 'bg-yellow-50 border-yellow-400' : ''
+                                            ref={stepUnitsRef}
+                                            className={`h-14 rounded-2xl border bg-white flex items-center justify-between px-4 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20 ${
+                                                flashingStep === 'units' ? 'shake-error border-red-500 bg-red-50/50' : 'border-gray-200'
                                             }`}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* STEP 7: Packing Charges */}
-                                <div className="relative transition-all">
-                                    {!isRateUnlocked && (
-                                        <div
-                                            onClick={() => triggerLockedFeedback('rate', stepRateRef)}
-                                            onMouseEnter={() => showTooltip('packing-lock')}
-                                            onMouseLeave={() => setActiveTooltipStep(null)}
-                                            className="absolute inset-0 z-20 cursor-not-allowed bg-transparent"
-                                        />
-                                    )}
-
-                                    {activeTooltipStep === 'packing-lock' && (
-                                        <div className="absolute -top-7 start-2 ide-tooltip-popup animate-in fade-in duration-100">
-                                            <span className={isUrdu ? 'font-nastaliq' : ''}>
-                                                {isUrdu ? 'پہلے ریٹ لکھیں' : 'First enter the rate'}
+                                        >
+                                            <span className={`text-sm font-medium text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                {isUrdu ? 'تعداد' : 'Units'}
                                             </span>
+                                            <input
+                                                ref={nagRef}
+                                                disabled={!isUnitsUnlocked}
+                                                tabIndex={!isUnitsUnlocked ? -1 : 0}
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                value={data.nag}
+                                                onChange={e => setData('nag', e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        weightRef.current?.focus();
+                                                    }
+                                                }}
+                                                placeholder="0"
+                                                className="w-24 text-end font-mono font-bold text-gray-900 bg-transparent text-base focus:outline-none placeholder:text-gray-400"
+                                                required
+                                            />
                                         </div>
-                                    )}
 
-                                    <div className={!isRateUnlocked ? 'step-locked-clean' : ''}>
-                                        <label className={`block text-sm font-semibold text-gray-800 mb-1.5 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                            {isUrdu ? 'بوری خرچہ' : 'Packing'}
-                                            <span className="block text-xs font-normal text-gray-400">{isUrdu ? '(اختیاری)' : '(optional)'}</span>
+                                        {/* WEIGHT */}
+                                        <div
+                                            ref={stepWeightRef}
+                                            className={`h-14 rounded-2xl border bg-white flex items-center justify-between px-4 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20 ${
+                                                flashingStep === 'weight' ? 'shake-error border-red-500 bg-red-50/50' : 'border-gray-200'
+                                            }`}
+                                        >
+                                            <span className={`text-sm font-medium text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                {isUrdu ? 'وزن' : 'Weight'}
+                                            </span>
+                                            <input
+                                                ref={weightRef}
+                                                disabled={!isWeightUnlocked}
+                                                tabIndex={!isWeightUnlocked ? -1 : 0}
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={data.weight}
+                                                onChange={e => setData('weight', e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        rateRef.current?.focus();
+                                                    }
+                                                }}
+                                                placeholder="0.00"
+                                                className="w-24 text-end font-mono font-bold text-gray-900 bg-transparent text-base focus:outline-none placeholder:text-gray-400"
+                                            />
+                                        </div>
+
+                                        {/* RATE */}
+                                        <div
+                                            ref={stepRateRef}
+                                            className={`h-14 rounded-2xl border bg-white flex items-center justify-between px-4 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20 ${
+                                                flashingStep === 'rate'
+                                                    ? 'shake-error border-red-500 bg-red-50/50'
+                                                    : isRateUnusual
+                                                    ? 'border-yellow-400 bg-yellow-50/30'
+                                                    : 'border-gray-200'
+                                            }`}
+                                        >
+                                            <span className={`text-sm font-medium text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                {isUrdu ? 'ریٹ' : 'Rate'}
+                                            </span>
+                                            <div className="flex items-center gap-1 font-mono font-bold text-gray-900">
+                                                <span className="text-xs text-gray-400">Rs.</span>
+                                                <input
+                                                    ref={rateRef}
+                                                    disabled={!isRateUnlocked}
+                                                    tabIndex={!isRateUnlocked ? -1 : 0}
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={data.rate}
+                                                    onChange={e => setData('rate', e.target.value)}
+                                                    onKeyDown={e => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            bardanaRef.current?.focus();
+                                                        }
+                                                    }}
+                                                    placeholder="0"
+                                                    className="w-20 text-end font-mono font-bold text-gray-900 bg-transparent text-base focus:outline-none placeholder:text-gray-400"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Optional Packing Charges Row */}
+                                    <div className="mt-2.5 flex items-center justify-end gap-2 text-xs text-gray-500">
+                                        <label className={isUrdu ? 'font-nastaliq' : ''}>
+                                            {isUrdu ? 'بوری خرچہ (اختیاری):' : 'Packing (optional):'}
                                         </label>
                                         <Input
                                             ref={bardanaRef}
@@ -985,104 +995,137 @@ Thank you!`;
                                             onKeyDown={e => {
                                                 if (e.key === 'Enter') {
                                                     e.preventDefault();
-                                                    if (isAddEnabled) {
-                                                        attemptSubmit();
-                                                    }
+                                                    if (isAddEnabled) attemptSubmit();
                                                 }
                                             }}
                                             placeholder="0"
-                                            className="h-11 text-base font-mono font-bold text-center bg-white border-gray-300 focus:border-gray-800"
+                                            className="h-8 w-24 text-center font-mono text-xs rounded-lg border-gray-200 bg-white"
                                         />
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="border-t border-gray-100" />
+                            {/* RIGHT CARD: Bill Preview */}
+                            <div className="lg:col-span-5 bg-white rounded-3xl p-6 md:p-7 border border-gray-100 shadow-md flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center gap-2.5 mb-5">
+                                        <Icon name="Receipt" className="size-5 text-[#1e713e]" weight="bold" />
+                                        <h3 className={`text-base font-bold text-gray-900 ${isUrdu ? 'font-nastaliq text-lg' : ''}`}>
+                                            {isUrdu ? 'بل کی تفصیل (Bill Preview)' : 'Bill Preview'}
+                                        </h3>
+                                    </div>
 
-                        {/* 3. Live Calculation Line + Add Button */}
-                        <div className="pt-3 bg-gray-50 rounded-xl border border-gray-200 p-3 flex flex-wrap items-center justify-between gap-3">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <span className={`text-xs text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : 'font-medium'}`}>
-                                    {isUrdu ? 'حساب:' : 'Calc:'}
-                                </span>
-                                <div className="text-sm md:text-base font-mono text-gray-700 truncate" dir="ltr">
-                                    {numWeight > 0 ? (
-                                        <span>
-                                            {numWeight} × {numRate.toLocaleString()} = {(numWeight * numRate).toLocaleString()}
+                                    <div className="space-y-3.5 text-sm">
+                                        <div className="flex justify-between items-center text-gray-600">
+                                            <span className={isUrdu ? 'font-nastaliq' : 'font-medium'}>{isUrdu ? 'طریقہ ادائیگی' : 'Payment'}</span>
+                                            <span className="font-bold text-gray-900">
+                                                {data.payment_type
+                                                    ? (data.payment_type === 'naqdi'
+                                                        ? (isUrdu ? 'نقد (Cash)' : 'Cash')
+                                                        : (isUrdu ? 'ادھار (Credit)' : 'Credit'))
+                                                    : '—'}
+                                            </span>
+                                        </div>
+                                        <div className="border-t border-dashed border-gray-200" />
+
+                                        <div className="flex justify-between items-center text-gray-600">
+                                            <span className={isUrdu ? 'font-nastaliq' : 'font-medium'}>{isUrdu ? 'خریدار' : 'Buyer'}</span>
+                                            <span className={`font-bold text-gray-900 truncate max-w-[200px] ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                {currentMerchant
+                                                    ? (isUrdu ? (currentMerchant.name_ur || currentMerchant.name_en) : (currentMerchant.name_en || currentMerchant.name_ur))
+                                                    : '—'}
+                                            </span>
+                                        </div>
+                                        <div className="border-t border-dashed border-gray-200" />
+
+                                        <div className="flex justify-between items-center text-gray-600">
+                                            <span className={isUrdu ? 'font-nastaliq' : 'font-medium'}>{isUrdu ? 'مال (آئٹم)' : 'Item'}</span>
+                                            <span className={`font-bold text-gray-900 truncate max-w-[200px] ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                {currentItem
+                                                    ? (isUrdu ? (currentItem.name_ur || currentItem.name_en) : (currentItem.name_en || currentItem.name_ur))
+                                                    : '—'}
+                                            </span>
+                                        </div>
+                                        <div className="border-t border-dashed border-gray-200" />
+
+                                        <div className="flex justify-between items-center text-gray-600">
+                                            <span className={isUrdu ? 'font-nastaliq' : 'font-medium'}>{isUrdu ? 'تعداد × ریٹ' : 'Units × Rate'}</span>
+                                            <span className="font-mono font-bold text-gray-900" dir="ltr">
+                                                {numWeight > 0
+                                                    ? `${numWeight} × ${numRate.toLocaleString()} = ${(numWeight * numRate).toLocaleString()}`
+                                                    : numNag > 0 && numRate > 0
+                                                    ? `${numNag} × ${numRate.toLocaleString()} = ${(numNag * numRate).toLocaleString()}`
+                                                    : '0 × 0 = 0'}
+                                            </span>
+                                        </div>
+
+                                        {numBardana > 0 && (
+                                            <>
+                                                <div className="border-t border-dashed border-gray-200" />
+                                                <div className="flex justify-between items-center text-gray-600">
+                                                    <span className={isUrdu ? 'font-nastaliq' : 'font-medium'}>{isUrdu ? 'بوری خرچہ' : 'Packing'}</span>
+                                                    <span className="font-mono font-bold text-gray-900" dir="ltr">
+                                                        Rs. {numBardana.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="mt-6 space-y-4">
+                                    <div className="bg-[#eef6f0] rounded-2xl p-4 flex items-center justify-between">
+                                        <span className={`text-xs font-bold text-gray-600 uppercase tracking-wider ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                            {isUrdu ? 'کل رقم' : 'TOTAL'}
                                         </span>
-                                    ) : (
-                                        <span>
-                                            {numNag} × {numRate.toLocaleString()} = {(numNag * numRate).toLocaleString()}
-                                        </span>
-                                    )}
-                                    {numBardana > 0 && (
-                                        <span> + {numBardana.toLocaleString()}</span>
+                                        <div className="text-3xl font-black font-mono text-[#14532d]" dir="ltr">
+                                            Rs. {grossAmount.toLocaleString()}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        {editingSale && (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => resetForm()}
+                                                className="h-14 px-4 rounded-2xl border-red-300 text-red-600 hover:bg-red-50 font-bold"
+                                            >
+                                                {isUrdu ? 'منسوخ' : 'Cancel'}
+                                            </Button>
+                                        )}
+                                        <Button
+                                            ref={submitBtnRef}
+                                            type="submit"
+                                            disabled={!isAddEnabled || processing}
+                                            className={`w-full h-14 rounded-2xl text-base font-bold flex items-center justify-center gap-2 transition-all shadow-sm ${
+                                                isAddEnabled
+                                                    ? 'bg-[#1e713e] hover:bg-[#165a31] text-white cursor-pointer shadow-md'
+                                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-200'
+                                            }`}
+                                        >
+                                            <span>
+                                                {editingSale
+                                                    ? (isUrdu ? 'تبدیل کریں' : 'Save Changes')
+                                                    : (isUrdu ? 'محفوظ کریں' : 'Save Sale')}
+                                            </span>
+                                            <Icon name="Check" className="size-5" weight="bold" />
+                                        </Button>
+                                    </div>
+
+                                    {!isAddEnabled && missingFields.length > 0 && (
+                                        <p className="text-xs text-center text-gray-400 font-medium">
+                                            {isUrdu ? 'باقی ہے: ' : 'Baqi hai: '}
+                                            <span className="text-gray-600 font-semibold">{missingFields.join(isUrdu ? '، ' : ', ')}</span>
+                                        </p>
                                     )}
                                 </div>
-                                <span className="text-gray-900 font-black text-base md:text-lg font-mono shrink-0 ms-1">
-                                    = Rs. {grossAmount.toLocaleString()}
-                                </span>
-                            </div>
-
-                            {/* Add Button */}
-                            <div className="relative flex items-center gap-2 w-full md:w-auto">
-                                {!isAddEnabled && (
-                                    <div
-                                        onClick={attemptSubmit}
-                                        onMouseEnter={() => showTooltip('add-lock')}
-                                        onMouseLeave={() => setActiveTooltipStep(null)}
-                                        className="absolute inset-0 z-20 cursor-not-allowed bg-transparent"
-                                    />
-                                )}
-
-                                {activeTooltipStep === 'add-lock' && (
-                                    <div className="absolute -top-7 end-0 ide-tooltip-popup animate-in fade-in duration-100">
-                                        <span className={isUrdu ? 'font-nastaliq' : ''}>
-                                            {isUrdu ? 'پہلے ضروری خانے پورے کریں' : 'Please fill all required fields'}
-                                        </span>
-                                    </div>
-                                )}
-
-                                {editingSale && (
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => resetForm()}
-                                        className={`h-11 px-4 text-sm bg-white text-red-600 hover:bg-red-50 border-red-300 ${isUrdu ? 'font-nastaliq' : ''}`}
-                                    >
-                                        {isUrdu ? 'منسوخ' : 'Cancel'}
-                                    </Button>
-                                )}
-
-                                <Button
-                                    ref={submitBtnRef}
-                                    type="submit"
-                                    size="sm"
-                                    disabled={!isAddEnabled || processing}
-                                    className={`h-11 px-6 text-sm font-semibold flex-1 md:flex-none flex items-center justify-center gap-2 transition-all ${
-                                        isUrdu ? 'font-nastaliq' : ''
-                                    } ${
-                                        isAddEnabled
-                                            ? 'bg-gray-900 hover:bg-gray-800 text-white cursor-pointer shadow-md'
-                                            : 'bg-gray-300 text-gray-400 cursor-not-allowed'
-                                    }`}
-                                >
-                                    <span>
-                                        {editingSale
-                                            ? (isUrdu ? 'تبدیل کریں' : 'Save Changes')
-                                            : (isUrdu ? 'شامل کریں ↵' : 'Add ↵')}
-                                    </span>
-                                    <Icon name="PlusCircle" className="size-4" />
-                                </Button>
                             </div>
                         </div>
                     </form>
-                </div>
 
                 {/* 4. Controls Bar */}
-                <div className="flex flex-wrap items-center justify-between gap-2 bg-white p-2 rounded-lg border shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 bg-white p-3 rounded-2xl border border-gray-100 shadow-xs">
                     <div className="flex items-center gap-2">
                         <Button
                             type="button"
@@ -1106,19 +1149,19 @@ Thank you!`;
                             value={searchFilter}
                             onChange={e => setSearchFilter(e.target.value)}
                             placeholder={isUrdu ? "تلاش کریں..." : "Search..."}
-                            className={`h-8 text-xs ${isUrdu ? 'font-nastaliq' : ''}`}
+                            className={`h-8 text-xs rounded-xl ${isUrdu ? 'font-nastaliq' : ''}`}
                         />
-                        <Button type="submit" size="sm" variant="outline" className="h-8 px-2.5">
+                        <Button type="submit" size="sm" variant="outline" className="h-8 px-2.5 rounded-xl">
                             <Icon name="Search" className="size-3.5" />
                         </Button>
                     </form>
                 </div>
 
                 {/* 5. Entries Table */}
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-xs">
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-xs">
                     <div className="overflow-x-auto">
                         <table className="w-full text-xs">
-                            <thead className="bg-green-800 text-white select-none">
+                            <thead className="bg-[#14532d] text-white select-none">
                                 <tr>
                                     <th className={`p-2 text-center w-8 ${isUrdu ? 'font-nastaliq' : ''}`}>#</th>
                                     <th className={`p-2 text-start w-16 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'طریقہ' : 'Payment'}</th>
@@ -1259,6 +1302,7 @@ Thank you!`;
                             </tbody>
                         </table>
                     </div>
+                </div>
                 </div>
 
                 {/* 6. Sticky Live Footer */}
