@@ -103,8 +103,11 @@
             "database/**/*",
             "routes/**/*",
             "resources/views/**/*",
+            "storage/**/*",
             "vendor/**/*",
             "artisan",
+            "server.php",
+            "composer.json",
             ".env",
             "!node_modules/**/*"
         ],

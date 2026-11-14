@@ -155,11 +155,31 @@ async function ensureServerRunning() {
         }
     }
 
+    // Ensure storage folders exist
+    const storageDirs = [
+        path.join(appRoot, 'storage', 'framework', 'views'),
+        path.join(appRoot, 'storage', 'framework', 'cache'),
+        path.join(appRoot, 'storage', 'framework', 'sessions'),
+        path.join(appRoot, 'storage', 'logs'),
+    ];
+    for (const dir of storageDirs) {
+        if (!fs.existsSync(dir)) {
+            try {
+                fs.mkdirSync(dir, { recursive: true });
+            } catch (e) {}
+        }
+    }
+
     const args = [];
     if (phpInfo.ini && fs.existsSync(phpInfo.ini)) {
         args.push('-c', phpInfo.ini);
     }
-    args.push('artisan', 'serve', `--host=${HOST}`, `--port=${PORT}`);
+    const serverPhp = path.join(appRoot, 'server.php');
+    if (fs.existsSync(serverPhp)) {
+        args.push('-S', `${HOST}:${PORT}`, 'server.php');
+    } else {
+        args.push('artisan', 'serve', `--host=${HOST}`, `--port=${PORT}`);
+    }
 
     const macExtraPath = '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin';
     phpProcess = spawn(phpInfo.binary, args, {
@@ -314,9 +334,14 @@ function createMainWindow() {
         }, remaining);
     };
 
-    mainWindow.webContents.once('did-finish-load', () => {
-        console.log('[Vegetable POS Desktop] Main page loaded, transitioning...');
-        transitionToMain();
+    mainWindow.webContents.on('did-finish-load', () => {
+        const currentUrl = mainWindow.webContents.getURL();
+        if (currentUrl.startsWith('http://127.0.0.1') || currentUrl.startsWith('http://localhost')) {
+            console.log('[Vegetable POS Desktop] Main page loaded, transitioning...');
+            transitionToMain();
+        } else {
+            console.log('[Vegetable POS Desktop] Main page non-HTTP load:', currentUrl);
+        }
     });
 
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
