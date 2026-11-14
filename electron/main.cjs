@@ -134,13 +134,17 @@ async function ensureServerRunning() {
     console.log('[Vegetable POS Desktop] Using PHP binary:', phpInfo.binary);
     console.log('[Vegetable POS Desktop] App root directory:', appRoot);
 
-    // Ensure database path & write permissions
+    // Ensure database path & writable storage permissions (AppData / userData)
     let dbPath = path.join(appRoot, 'database', 'database.sqlite');
-    if (isMac && app.isPackaged) {
+    let storagePath = path.join(appRoot, 'storage');
+
+    if (app.isPackaged) {
         const userDataDir = app.getPath('userData');
         if (!fs.existsSync(userDataDir)) {
             fs.mkdirSync(userDataDir, { recursive: true });
         }
+
+        // 1. Database in writable AppData / userData
         const userDbPath = path.join(userDataDir, 'database.sqlite');
         if (!fs.existsSync(userDbPath) && fs.existsSync(dbPath)) {
             try {
@@ -153,14 +157,20 @@ async function ensureServerRunning() {
         if (fs.existsSync(userDbPath)) {
             dbPath = userDbPath;
         }
+
+        // 2. Storage in writable AppData / userData
+        storagePath = path.join(userDataDir, 'storage');
     }
 
-    // Ensure storage folders exist
+    // Ensure storage folders exist in writable path
     const storageDirs = [
-        path.join(appRoot, 'storage', 'framework', 'views'),
-        path.join(appRoot, 'storage', 'framework', 'cache'),
-        path.join(appRoot, 'storage', 'framework', 'sessions'),
-        path.join(appRoot, 'storage', 'logs'),
+        storagePath,
+        path.join(storagePath, 'framework'),
+        path.join(storagePath, 'framework', 'views'),
+        path.join(storagePath, 'framework', 'cache'),
+        path.join(storagePath, 'framework', 'cache', 'data'),
+        path.join(storagePath, 'framework', 'sessions'),
+        path.join(storagePath, 'logs'),
     ];
     for (const dir of storageDirs) {
         if (!fs.existsSync(dir)) {
@@ -190,6 +200,7 @@ async function ensureServerRunning() {
         env: {
             ...process.env,
             DB_DATABASE: dbPath,
+            LARAVEL_STORAGE_PATH: storagePath,
             PATH: isMac
                 ? `${macExtraPath}:${process.env.PATH || ''}`
                 : process.env.PATH,

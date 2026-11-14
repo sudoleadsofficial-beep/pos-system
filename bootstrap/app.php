@@ -11,6 +11,7 @@ use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
+    ->useStoragePath(env('LARAVEL_STORAGE_PATH', dirname(__DIR__) . '/storage'))
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
         commands: __DIR__ . '/../routes/console.php',
