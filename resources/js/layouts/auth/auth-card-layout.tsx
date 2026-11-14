@@ -23,13 +23,13 @@ export default function AuthCardLayout({
     const isUrdu = i18n.language === 'ur';
 
     return (
-        <div className="bg-muted min-h-svh flex flex-col justify-between p-4 md:p-8">
-            {/* Top header bar with language toggle */}
-            <div className="flex items-center justify-between w-full max-w-4xl mx-auto py-2">
+        <div className="bg-[#f4f7f4] min-h-[100dvh] flex flex-col justify-between p-3 sm:p-5 overflow-hidden">
+            {/* Top header bar with logo & language toggle */}
+            <div className="flex items-center justify-between w-full max-w-4xl mx-auto py-1 shrink-0">
                 <div className="flex items-center gap-2">
-                    <AppLogoIcon className="size-8" />
-                    <span className={`font-bold text-sm tracking-tight ${isUrdu ? 'font-nastaliq text-base' : ''}`}>
-                        {t('branding.name')}
+                    <AppLogoIcon className="size-7" />
+                    <span className="font-black text-sm tracking-tight text-[#166534]">
+                        Vegetable POS
                     </span>
                 </div>
                 <div>
@@ -38,34 +38,26 @@ export default function AuthCardLayout({
             </div>
 
             {/* Center card */}
-            <div className="flex w-full max-w-md mx-auto flex-col gap-6 my-auto">
-                <Card className="rounded-xl shadow-md border bg-card">
-                    <CardHeader className="px-8 pt-6 pb-2 text-center">
+            <div className="flex w-full max-w-md mx-auto flex-col my-auto shrink-0">
+                <Card className="rounded-2xl shadow-sm border border-gray-200/90 bg-white">
+                    <CardHeader className="px-6 pt-5 pb-2 text-center">
                         <div className="flex justify-center mb-2">
-                            <AppLogoIcon className="size-16" />
+                            <AppLogoIcon className="size-14" />
                         </div>
-                        <h1 className={`text-xl font-bold text-primary ${isUrdu ? 'font-nastaliq text-2xl' : ''}`}>
-                            {t('branding.name')}
+                        <h1 className="text-xl font-black text-[#166534] tracking-tight">
+                            Vegetable POS
                         </h1>
-                        <p className="text-xs text-muted-foreground font-medium">
-                            {t('branding.tagline')}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {t('branding.address')}
-                        </p>
-                        <div className="pt-4 flex flex-col">
-                            <CardTitle className="text-lg">{title}</CardTitle>
-                            {description && <CardDescription className="text-xs">{description}</CardDescription>}
+                        <div className="pt-2 flex flex-col">
+                            <CardTitle className={`text-base font-bold text-gray-800 ${isUrdu ? 'font-nastaliq text-lg' : ''}`}>{title}</CardTitle>
+                            {description && <CardDescription className="text-xs text-gray-500">{description}</CardDescription>}
                         </div>
                     </CardHeader>
-                    <CardContent className="px-8 py-6">{children}</CardContent>
+                    <CardContent className="px-6 pb-6 pt-2">{children}</CardContent>
                 </Card>
             </div>
 
-            {/* Footer with phones */}
-            <div className="text-center text-xs text-muted-foreground py-2">
-                {t('branding.phones')}
-            </div>
+            {/* Empty footer spacer */}
+            <div className="py-1 shrink-0" />
         </div>
     );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
@@ -6,6 +6,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
+import MandiPageHeader from '@/components/app/mandi-page-header';
 import { toast } from 'sonner';
 
 interface NaqdiRow {
@@ -52,6 +53,14 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
         return initial;
     });
 
+    useEffect(() => {
+        const initial: Record<number, string> = {};
+        rows.forEach(r => {
+            initial[r.merchant_id] = r.naqdi_wasooli > 0 ? String(r.naqdi_wasooli) : '';
+        });
+        setEditedAmounts(initial);
+    }, [rows, selectedDate]);
+
     const [savingId, setSavingId] = useState<number | null>(null);
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -61,7 +70,7 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
 
     function handleDateChange(newDate: string) {
         setSelectedDate(newDate);
-        router.get('/naqdi', { date: newDate }, { preserveState: true, replace: true });
+        router.get('/naqdi', { date: newDate }, { preserveState: false, replace: true });
     }
 
     function setQuickDate(offsetDays: number) {
@@ -91,12 +100,13 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
             amount: amount,
         }, {
             preserveScroll: true,
+            preserveState: false,
             onSuccess: () => {
-                toast.success(t('common.saved'));
+                toast.success(isUrdu ? 'نقدی وصولی محفوظ ہو گئی' : 'Naqdi receipt saved successfully');
                 setSavingId(null);
             },
             onError: () => {
-                toast.error(t('common.error'));
+                toast.error(isUrdu ? 'محفوظ نہیں ہو سکا' : 'Could not save receipt');
                 setSavingId(null);
             },
         });
@@ -120,55 +130,44 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('naqdi.title')} />
 
-            <div className="-mt-3 md:-mt-6 -mx-3 md:-mx-6 pb-24 bg-[#eef2ee] min-h-screen" dir={isUrdu ? 'rtl' : 'ltr'}>
+            <div className="-mt-3 md:-mt-6 -mx-3 md:-mx-6 pb-24 bg-[#eef2ee] min-h-screen font-sans text-[#1a211c] dark:text-[#e7ece8]" dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* 1. Dark Green Top Header Banner */}
-                <div className="bg-[#14532d] px-4 md:px-8 pt-6 pb-16 md:pb-20 text-white shadow-sm">
-                    <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <h1 className={`text-2xl md:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                <Icon name="Coins" className="size-7 md:size-8 text-emerald-300" weight="fill" />
-                                {t('naqdi.title')}
-                            </h1>
-                            <p className={`text-emerald-100/80 text-xs md:text-sm font-medium mt-1 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {t('branding.name')}
-                            </p>
-                        </div>
-
-                        {/* Date Picker + Quick Buttons */}
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setQuickDate(0)}
-                                className={`h-10 px-5 rounded-xl text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
-                            >
-                                {isUrdu ? 'آج' : 'Today'}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setQuickDate(-1)}
-                                className={`h-10 px-5 rounded-xl text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
-                            >
-                                {isUrdu ? 'گزشتہ کل' : 'Yesterday'}
-                            </button>
-                            <div className="relative flex items-center">
-                                <input
-                                    type="date"
-                                    value={selectedDate}
-                                    onChange={e => handleDateChange(e.target.value)}
-                                    className="h-10 w-36 rounded-xl bg-white text-gray-900 font-bold text-sm cursor-pointer shadow-xs px-3 text-center border-0 outline-none"
-                                />
-                            </div>
-                        </div>
+                <MandiPageHeader
+                    title={t('naqdi.title')}
+                    subtitle={isUrdu ? 'آج کی نقدی اینٹری · نقدی' : 'Aaj ki naqdi entry · Naqdi'}
+                    isUrdu={isUrdu}
+                >
+                    <button
+                        type="button"
+                        onClick={() => setQuickDate(0)}
+                        className={`h-9 px-4 rounded-xl text-xs md:text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
+                    >
+                        {isUrdu ? 'آج' : 'Today'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setQuickDate(-1)}
+                        className={`h-9 px-4 rounded-xl text-xs md:text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
+                    >
+                        {isUrdu ? 'گزشتہ کل' : 'Yesterday'}
+                    </button>
+                    <div className="relative flex items-center">
+                        <input
+                            type="date"
+                            value={selectedDate}
+                            onChange={e => handleDateChange(e.target.value)}
+                            className="h-9 w-32 md:w-36 rounded-xl bg-white text-gray-900 font-bold text-xs md:text-sm cursor-pointer shadow-xs px-2.5 text-center border-0 outline-none"
+                        />
                     </div>
-                </div>
+                </MandiPageHeader>
 
-                {/* Content Container (Floating over header) */}
-                <div className="max-w-7xl mx-auto px-3 md:px-6 -mt-10 md:-mt-12 space-y-4">
+                {/* Content Container (Floating over header with clean spacing) */}
+                <div className="max-w-7xl mx-auto px-3 md:px-6 -mt-6 md:-mt-8 space-y-4">
                     {/* Table Card */}
-                    <div className="rounded-3xl border border-gray-100 overflow-hidden shadow-md bg-white">
+                    <div className="rounded-2xl border border-gray-200/90 overflow-hidden shadow-sm bg-white">
                         <div className="overflow-x-auto">
                             <table className="w-full text-xs">
-                                <thead className="bg-[#14532d] text-white select-none">
+                                <thead className="bg-[#f0f4f1] text-[#14532d] border-b border-gray-200 select-none">
                                     <tr>
                                         <th className="p-3 text-center w-12 font-bold">#</th>
                                         <th className="p-3 text-start w-20 font-bold">{t('common.code')}</th>
@@ -198,32 +197,19 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                                                 <tr
                                                     key={row.merchant_id}
                                                     onClick={() => setSelectedRowIndex(idx)}
-                                                    className={`transition-colors cursor-pointer ${
-                                                        isSelected
-                                                            ? 'bg-amber-100/90 font-medium'
-                                                            : idx % 2 === 0
-                                                            ? 'bg-white hover:bg-emerald-50/40'
-                                                            : 'bg-[#f8fbf9] hover:bg-emerald-50/40'
-                                                    }`}
+                                                    className="bg-white hover:bg-gray-50/60 transition-colors cursor-pointer"
                                                 >
-                                                    <td className="p-3 text-center text-gray-500 font-mono text-xs">{idx + 1}</td>
-                                                    <td className="p-3">
-                                                        <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded-lg text-xs">
-                                                            #{row.code}
-                                                        </span>
+                                                    <td className="p-3 text-center text-gray-400 font-mono tabular-nums text-xs">{idx + 1}</td>
+                                                    <td className="p-3 font-mono tabular-nums font-bold text-gray-900 text-xs">
+                                                        #{row.code}
                                                     </td>
                                                     <td className="p-3">
                                                         <span className={`font-semibold text-gray-900 text-sm ${isUrdu ? 'font-nastaliq' : ''}`}>
                                                             {isUrdu ? (row.name_ur || row.name_en) : (row.name_en || row.name_ur)}
                                                         </span>
-                                                        {isNaqdi && (
-                                                            <span className="ms-2 px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-sans font-medium">
-                                                                {t('merchants.cash_customer')}
-                                                            </span>
-                                                        )}
                                                     </td>
-                                                    <td className="p-3 text-end font-mono font-bold text-gray-800">{row.total_nag}</td>
-                                                    <td className="p-3 text-end font-mono font-bold text-gray-900">
+                                                    <td className="p-3 text-end font-mono tabular-nums font-bold text-gray-800">{row.total_nag}</td>
+                                                    <td className="p-3 text-end font-mono tabular-nums font-bold text-gray-900">
                                                         Rs. {Number(row.kham_bikri).toLocaleString()}
                                                     </td>
                                                     <td className="p-2 text-end" onClick={e => e.stopPropagation()}>
@@ -240,7 +226,7 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                                                                         saveCashReceipt(row.merchant_id);
                                                                     }
                                                                 }}
-                                                                className="h-9 w-28 text-end font-mono text-xs font-bold rounded-xl border-gray-200 bg-white focus:border-[#1e713e]"
+                                                                className="h-9 w-28 text-end font-mono tabular-nums text-xs font-bold rounded-xl border-gray-200 bg-white focus:border-[#1e713e]"
                                                                 placeholder="0.00"
                                                             />
                                                             <Button
@@ -253,7 +239,7 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                                                             </Button>
                                                         </div>
                                                     </td>
-                                                    <td className="p-3 text-end font-mono font-black text-[#14532d] text-sm">
+                                                    <td className="p-3 text-end font-mono tabular-nums font-black text-[#14532d] text-sm">
                                                         Rs. {liveBaqaya.toLocaleString()}
                                                     </td>
                                                 </tr>
@@ -280,7 +266,7 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                         </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+                    <div className="flex flex-wrap items-center gap-2 font-mono tabular-nums text-xs">
                         <div className="bg-emerald-800/90 border border-emerald-600 px-3 py-1 rounded-lg flex items-center gap-1">
                             <span className="text-emerald-200 font-semibold font-sans">{t('naqdi.kham_bikri')}:</span>
                             <span className="font-bold text-white">Rs. {Number(totals.total_kham_bikri).toLocaleString()}</span>

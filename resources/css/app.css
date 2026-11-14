@@ -8,7 +8,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-    --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono: 'Geist Mono', monospace;
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -197,5 +197,95 @@ html[lang="ur"] .font-nastaliq {
 /* RTL icon mirroring for direction-sensitive icons */
 html[dir="rtl"] .rtl-flip {
     transform: scaleX(-1);
+}
+
+/* ==========================================================================
+   PRODUCTION PRINT SYSTEM
+   ========================================================================== */
+@media print {
+    /* Hide all layout sidebars, topbars, navigation, modals backdrop, footers */
+    [data-sidebar],
+    .sidebar,
+    header,
+    nav,
+    aside,
+    .print\:hidden,
+    button:not(.print-include),
+    input[type="button"],
+    input[type="submit"] {
+        display: none !important;
+    }
+
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 11pt !important;
+    }
+
+    /* Thermal 80mm Sale Slip Print */
+    body.printing-slip {
+        width: 80mm !important;
+        max-width: 80mm !important;
+        margin: 0 auto !important;
+    }
+
+    body.printing-slip * {
+        visibility: hidden !important;
+    }
+
+    body.printing-slip #printable-sale-slip,
+    body.printing-slip #printable-sale-slip * {
+        visibility: visible !important;
+    }
+
+    body.printing-slip #printable-sale-slip {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 78mm !important;
+        max-width: 78mm !important;
+        padding: 2mm !important;
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Standard A4 Report Document Print */
+    .print-document-container {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    .print-document-container table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        page-break-inside: auto;
+    }
+
+    .print-document-container tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+
+    .print-document-container thead {
+        display: table-header-group;
+    }
+
+    .print-document-container tfoot {
+        display: table-footer-group;
+    }
+
+    @page {
+        size: auto;
+        margin: 6mm;
+    }
 }
 

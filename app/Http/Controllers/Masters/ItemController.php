@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Masters;
 
 use App\Http\Controllers\Controller;
 use App\Models\Item;
+use App\Models\FarmerMark;
+use App\Models\Area;
+use App\Models\Farmer;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -12,24 +15,65 @@ class ItemController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Item::query();
+        $tab = $request->query('tab', 'items');
 
-        if ($request->filled('search')) {
+        // Items
+        $iQuery = Item::query();
+        if ($request->filled('search') && $tab === 'items') {
             $s = $request->search;
-            $query->where(function ($q) use ($s) {
+            $iQuery->where(function ($q) use ($s) {
                 $q->where('name_en', 'like', "%{$s}%")
                   ->orWhere('name_ur', 'like', "%{$s}%")
                   ->orWhere('unit', 'like', "%{$s}%");
             });
         }
-
-        $items = $query->orderBy('name_ur', 'asc')
-            ->paginate($request->per_page ?? 15)
+        $items = $iQuery->orderBy('name_ur', 'asc')
+            ->paginate($request->per_page ?? 15, ['*'], 'items_page')
             ->withQueryString();
+
+        // Marks
+        $mQuery = FarmerMark::with('farmer');
+        if ($request->filled('search') && $tab === 'marks') {
+            $s = $request->search;
+            $mQuery->where(function ($q) use ($s) {
+                $q->where('name_en', 'like', "%{$s}%")
+                  ->orWhere('name_ur', 'like', "%{$s}%")
+                  ->orWhereHas('farmer', function ($fq) use ($s) {
+                      $fq->where('name_en', 'like', "%{$s}%")
+                         ->orWhere('name_ur', 'like', "%{$s}%");
+                  });
+            });
+        }
+        $marks = $mQuery->orderBy('farmer_id', 'asc')
+            ->orderBy('code', 'asc')
+            ->paginate($request->per_page ?? 15, ['*'], 'marks_page')
+            ->withQueryString();
+
+        // Areas
+        $aQuery = Area::query();
+        if ($request->filled('search') && $tab === 'areas') {
+            $s = $request->search;
+            $aQuery->where(function ($q) use ($s) {
+                $q->where('name_en', 'like', "%{$s}%")
+                  ->orWhere('name_ur', 'like', "%{$s}%");
+            });
+        }
+        $areas = $aQuery->orderBy('name_ur', 'asc')
+            ->paginate($request->per_page ?? 15, ['*'], 'areas_page')
+            ->withQueryString();
+
+        $farmers = Farmer::where('status', 'active')
+            ->select(['id', 'code', 'name_en', 'name_ur'])
+            ->orderBy('code', 'asc')
+            ->get();
 
         return Inertia::render('masters/items/index', [
             'items' => $items,
-            'filters' => $request->only(['search']),
+            'marks' => $marks,
+            'areas' => $areas,
+            'farmers' => $farmers,
+            'currentTab' => $tab,
+            'filters' => $request->only(['search', 'tab']),
         ]);
     }
 

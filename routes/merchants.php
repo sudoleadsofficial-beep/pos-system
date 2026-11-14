@@ -15,6 +15,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Merchant Reports & Detail Views
     Route::get('merchant-amroza', [MerchantReportController::class, 'merchantAmroza'])->name('reports.merchant_amroza');
     Route::get('merchant-wasooli', [MerchantReportController::class, 'merchantWasooli'])->name('reports.merchant_wasooli');
+    Route::get('merchant-khata', [MerchantReportController::class, 'merchantKhata'])->name('reports.merchant_khata');
     Route::get('amroza-detail', [MerchantReportController::class, 'amrozaDetail'])->name('reports.amroza_detail');
     Route::get('wasooli-detail', [MerchantReportController::class, 'wasooliDetail'])->name('reports.wasooli_detail');
     Route::get('amroza-wasooli', [MerchantReportController::class, 'amrozaWasooli'])->name('reports.amroza_wasooli');

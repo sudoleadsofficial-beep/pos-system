@@ -81,7 +81,7 @@ export function DashboardStats({ stats = {} }: DashboardStatsProps) {
             {cards.map((card, idx) => (
                 <Card key={idx} className="rounded-xl border shadow-xs hover:shadow-sm transition-shadow">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className={`text-xs font-semibold text-muted-foreground ${isUrdu ? 'font-nastaliq text-sm' : ''}`}>
+                        <CardTitle className={`text-xs font-semibold text-muted-foreground ${isUrdu ? 'font-nastaliq text-sm' : ''}`} style={!isUrdu ? { fontFamily: 'var(--font-b, "Hind", sans-serif)' } : {}}>
                             {card.title}
                         </CardTitle>
                         <div className={`p-2 rounded-lg ${card.bg}`}>
@@ -89,7 +89,7 @@ export function DashboardStats({ stats = {} }: DashboardStatsProps) {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-xl font-bold tracking-tight text-foreground">
+                        <div className="text-xl font-bold tracking-tight text-foreground" style={{ fontFamily: 'var(--font-d, "Baloo 2", sans-serif)' }}>
                             {formattedNumber(card.value, "Rs")}
                         </div>
                     </CardContent>

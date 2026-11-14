@@ -69,16 +69,16 @@ function getAppRoot() {
 async function ensureServerRunning() {
     const isRunning = await checkServer();
     if (isRunning) {
-        console.log('[JKC Desktop] PHP server is already running on port ' + PORT);
+        console.log('[Vegetable POS Desktop] PHP server is already running on port ' + PORT);
         return true;
     }
 
-    console.log('[JKC Desktop] Starting local PHP server...');
+    console.log('[Vegetable POS Desktop] Starting local PHP server...');
     const phpInfo = getPhpBinaryInfo();
     const appRoot = getAppRoot();
 
-    console.log('[JKC Desktop] Using PHP binary:', phpInfo.binary);
-    console.log('[JKC Desktop] App root directory:', appRoot);
+    console.log('[Vegetable POS Desktop] Using PHP binary:', phpInfo.binary);
+    console.log('[Vegetable POS Desktop] App root directory:', appRoot);
 
     const args = [];
     if (phpInfo.ini && fs.existsSync(phpInfo.ini)) {
@@ -94,7 +94,7 @@ async function ensureServerRunning() {
     });
 
     phpProcess.on('error', (err) => {
-        console.error('[JKC Desktop] Failed to start PHP server:', err);
+        console.error('[Vegetable POS Desktop] Failed to start PHP server:', err);
     });
 
     // Poll until server responds (up to 12 seconds)
@@ -102,7 +102,7 @@ async function ensureServerRunning() {
         await new Promise((r) => setTimeout(r, 500));
         const up = await checkServer();
         if (up) {
-            console.log('[JKC Desktop] PHP server is ready!');
+            console.log('[Vegetable POS Desktop] PHP server is ready!');
             return true;
         }
     }
@@ -137,14 +137,14 @@ function createSplashWindow() {
 
 // 2. Create Main Application Window
 function createMainWindow() {
-    const iconPath = path.join(__dirname, '..', 'public', 'favicon.ico');
+    const iconPath = path.join(__dirname, '..', 'public', 'icon-256.ico');
 
     mainWindow = new BrowserWindow({
         width: 1366,
         height: 850,
         minWidth: 1024,
         minHeight: 700,
-        title: 'JKC - Vegetable Commission Agent System',
+        title: 'Vegetable POS',
         icon: fs.existsSync(iconPath) ? iconPath : undefined,
         autoHideMenuBar: true,
         backgroundColor: '#ffffff',
@@ -178,12 +178,12 @@ function createMainWindow() {
     };
 
     mainWindow.webContents.once('did-finish-load', () => {
-        console.log('[JKC Desktop] Main page loaded, transitioning...');
+        console.log('[Vegetable POS Desktop] Main page loaded, transitioning...');
         transitionToMain();
     });
 
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-        console.log('[JKC Desktop] Main load retry...', errorCode, errorDescription);
+        console.log('[Vegetable POS Desktop] Main load retry...', errorCode, errorDescription);
         setTimeout(() => {
             if (mainWindow && !mainWindow.isDestroyed()) {
                 mainWindow.loadURL(START_URL);
@@ -220,7 +220,7 @@ app.whenReady().then(async () => {
 function cleanup() {
     if (phpProcess) {
         try {
-            console.log('[JKC Desktop] Stopping local PHP process...');
+            console.log('[Vegetable POS Desktop] Stopping local PHP process...');
             phpProcess.kill();
             phpProcess = null;
         } catch (e) {

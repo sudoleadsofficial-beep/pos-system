@@ -49,20 +49,26 @@
     "year": "Year 2026"
   },
   "branding": {
-    "name": "Jaffer Khan & Brother Company",
-    "tagline": "Vegetable Commission Agent",
-    "address": "Shop No. 10, New Sabzi Mandi, Super Highway, Karachi.",
-    "phones": "0303-8598049 (Jaffer Khan), 0318-8598049, 0340-2108382 (Muhammad Raza, Proprietor)",
-    "short_name": "JKC"
+    "name": "Vegetable POS",
+    "tagline": "",
+    "address": "",
+    "phones": "",
+    "short_name": "V-POS"
   },
   "nav": {
     "dashboard": "Dashboard",
     "daily_overview": "Daily Overview",
     "home": "Home",
+    "daily_kaam": "Daily Kaam",
+    "nayi_sale": "Nayi Sale",
+    "farmer_bill_bijak": "Farmer Bill (Bijak)",
     "merchant_side": "Merchant Side (Wasooli)",
     "farmer_side": "Farmer Side (Main)",
     "cash_book": "Cash Book",
     "masters": "Masters",
+    "setup": "Setup",
+    "merchants_farmers": "Merchants / Farmers",
+    "items_marks_areas": "Items / Marks / Areas",
     "reports": "Reports",
     "system": "System",
     "amroza": "Amroza",
@@ -70,6 +76,8 @@
     "wasooli": "Wasooli",
     "merchant_amroza": "Merchant Amroza",
     "merchant_wasooli": "Merchant Wasooli",
+    "merchant_khata": "Merchant Khata",
+    "farmer_khata": "Farmer Khata",
     "amroza_detail": "Amroza Detail",
     "wasooli_detail": "Wasooli Detail",
     "amroza_wasooli": "Amroza / Wasooli",
@@ -80,7 +88,7 @@
     "bari_detail": "Bari Detail",
     "bari_jama_banam": "Bari Jama Banam",
     "khata_index": "Khata Index",
-    "general_ledger": "General Ledger (Khata)",
+    "general_ledger": "General Ledger",
     "merchants": "Merchants",
     "farmers": "Farmers",
     "marks": "Marks (Bari)",
@@ -274,8 +282,8 @@
   },
   "auth": {
     "login": "Sign In",
-    "welcome_title": "Welcome to JKC",
-    "welcome_subtitle": "Jaffer Khan & Brother Company - Mandi System",
+    "welcome_title": "Vegetable POS mein khush aamdeed",
+    "welcome_subtitle": "Vegetable POS - Mandi System",
     "email": "Email Address",
     "password": "Password",
     "remember_me": "Remember me",
@@ -286,9 +294,10 @@
     "title": "Settings",
     "language": "Language",
     "english": "English",
-    "urdu": "اردو",
+    "urdu": "Ø§Ø±Ø¯Ùˆ",
     "company_profile": "Company Profile",
     "backup": "Database Backup",
     "year": "Accounting Year"
   }
 }
+

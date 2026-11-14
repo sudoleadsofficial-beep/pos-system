@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Masters;
 
 use App\Http\Controllers\Controller;
 use App\Models\Merchant;
+use App\Models\Farmer;
+use App\Models\Area;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -12,25 +14,46 @@ class MerchantController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Merchant::query();
+        $tab = $request->query('tab', 'merchants');
 
-        if ($request->filled('search')) {
+        // Merchants
+        $mQuery = Merchant::query();
+        if ($request->filled('search') && $tab === 'merchants') {
             $s = $request->search;
-            $query->where(function ($q) use ($s) {
+            $mQuery->where(function ($q) use ($s) {
                 $q->where('code', 'like', "%{$s}%")
                   ->orWhere('name_en', 'like', "%{$s}%")
                   ->orWhere('name_ur', 'like', "%{$s}%")
                   ->orWhere('phone', 'like', "%{$s}%");
             });
         }
-
-        $merchants = $query->orderBy('code', 'asc')
-            ->paginate($request->per_page ?? 15)
+        $merchants = $mQuery->orderBy('code', 'asc')
+            ->paginate($request->per_page ?? 15, ['*'], 'merchants_page')
             ->withQueryString();
+
+        // Farmers
+        $fQuery = Farmer::with(['area', 'marks']);
+        if ($request->filled('search') && $tab === 'farmers') {
+            $s = $request->search;
+            $fQuery->where(function ($q) use ($s) {
+                $q->where('code', 'like', "%{$s}%")
+                  ->orWhere('name_en', 'like', "%{$s}%")
+                  ->orWhere('name_ur', 'like', "%{$s}%")
+                  ->orWhere('phone', 'like', "%{$s}%");
+            });
+        }
+        $farmers = $fQuery->orderBy('code', 'asc')
+            ->paginate($request->per_page ?? 15, ['*'], 'farmers_page')
+            ->withQueryString();
+
+        $areas = Area::where('status', 'active')->orderBy('name_ur', 'asc')->get();
 
         return Inertia::render('masters/merchants/index', [
             'merchants' => $merchants,
-            'filters' => $request->only(['search']),
+            'farmers' => $farmers,
+            'areas' => $areas,
+            'currentTab' => $tab,
+            'filters' => $request->only(['search', 'tab']),
         ]);
     }
 

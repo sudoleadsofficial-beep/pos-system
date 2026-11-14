@@ -22,15 +22,10 @@ class NaqdiService
             ->pluck('merchant_id')
             ->toArray();
 
-        // Always include merchant 1 (Naqdi) if active
-        $naqdiMerchant = Merchant::where('code', 1)->first();
-        if ($naqdiMerchant) {
-            $merchantIdsFromSales[] = $naqdiMerchant->id;
-        }
-
         $allMerchantIds = array_unique(array_merge($merchantIdsFromSales, $merchantIdsFromReceipts));
 
         $merchants = Merchant::whereIn('id', $allMerchantIds)
+            ->where('code', '!=', 1)
             ->orderBy('code', 'asc')
             ->get();
 

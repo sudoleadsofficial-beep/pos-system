@@ -20,17 +20,17 @@ export function JkcBanner() {
                             </span>
                             <span className="text-xs text-emerald-200/80">Karachi Sabzi Mandi</span>
                         </div>
-                        <h1 className={`text-2xl md:text-3xl font-extrabold tracking-tight mt-1 ${isUrdu ? 'font-nastaliq text-3xl md:text-4xl leading-relaxed' : ''}`}>
+                        <h1 className={`text-2xl md:text-3xl font-extrabold tracking-tight mt-1 ${isUrdu ? 'font-nastaliq text-3xl md:text-4xl leading-relaxed' : ''}`} style={!isUrdu ? { fontFamily: 'var(--font-d, "Baloo 2", sans-serif)' } : {}}>
                             {t('branding.name')}
                         </h1>
-                        <p className="text-sm text-emerald-100 font-medium mt-0.5">
-                            {t('branding.tagline')} — {t('branding.address')}
+                        <p className="text-sm text-emerald-100 font-medium mt-0.5" style={{ fontFamily: 'var(--font-b, "Hind", sans-serif)' }}>
+                            {t('branding.tagline')} â€” {t('branding.address')}
                         </p>
                     </div>
                 </div>
                 <div className="text-start md:text-end text-xs text-emerald-200/90 space-y-1">
                     <div className="font-medium">{t('branding.phones')}</div>
-                    <div className="text-[11px] text-emerald-300/70">JKC Commission Agent Software 2026</div>
+                    <div className="text-[11px] text-emerald-300/70">Vegetable POS 2026</div>
                 </div>
             </div>
         </div>
@@ -38,3 +38,4 @@ export function JkcBanner() {
 }
 
 export default JkcBanner;
+

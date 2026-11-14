@@ -10,19 +10,19 @@ export const jkcSidebarNav: NavGroup[] = [
             {
                 title: "nav.dashboard",
                 url: "/dashboard",
-                icon: "ChartPieSliceIcon",
+                icon: "HouseIcon",
             },
         ],
         includeRoutes: ["dashboard"]
     },
     {
-        id: "merchants",
-        title: "nav.merchant_side",
-        icon: "UsersIcon",
+        id: "daily_kaam",
+        title: "nav.daily_kaam",
+        icon: "LightningIcon",
         isGroup: true,
         items: [
             {
-                title: "nav.amroza",
+                title: "nav.nayi_sale",
                 url: "/amroza",
                 icon: "TagIcon",
             },
@@ -37,166 +37,89 @@ export const jkcSidebarNav: NavGroup[] = [
                 icon: "HandCoinsIcon",
             },
             {
-                title: "nav.merchant_amroza",
-                url: "/merchant-amroza",
-                icon: "CalendarDotsIcon",
-            },
-            {
-                title: "nav.merchant_wasooli",
-                url: "/merchant-wasooli",
-                icon: "ClockCountdownIcon",
-            },
-            {
-                title: "nav.amroza_detail",
-                url: "/amroza-detail",
-                icon: "ListBulletsIcon",
-            },
-            {
-                title: "nav.wasooli_detail",
-                url: "/wasooli-detail",
-                icon: "ListChecksIcon",
-            },
-            {
-                title: "nav.amroza_wasooli",
-                url: "/amroza-wasooli",
-                icon: "ArrowsLeftRightIcon",
+                title: "nav.farmer_bill_bijak",
+                url: "/bijak",
+                icon: "ReceiptXIcon",
             },
         ],
         includeRoutes: [
             "amroza",
             "naqdi",
             "wasooli",
-            "merchant-amroza",
-            "merchant-wasooli",
-            "amroza-detail",
-            "wasooli-detail",
-            "amroza-wasooli"
+            "bijak"
         ]
     },
     {
-        id: "farmers",
-        title: "nav.farmer_side",
-        icon: "TruckIcon",
+        id: "khata",
+        title: "nav.khata",
+        icon: "BookOpenIcon",
         isGroup: true,
         items: [
             {
-                title: "nav.register",
-                url: "/register-consignment",
-                icon: "TruckIcon",
+                title: "nav.merchant_khata",
+                url: "/merchant-khata",
+                icon: "UsersIcon",
             },
             {
-                title: "nav.bijak",
-                url: "/bijak",
-                icon: "ReceiptXIcon",
-            },
-            {
-                title: "nav.general_bill",
-                url: "/general-bill",
-                icon: "FileTextIcon",
-            },
-            {
-                title: "nav.khata",
+                title: "nav.farmer_khata",
                 url: "/khata",
-                icon: "BookOpenIcon",
+                icon: "UserCircleIcon",
             },
-            {
-                title: "nav.bari_detail",
-                url: "/bari-detail",
-                icon: "BookmarksIcon",
-            },
-            {
-                title: "nav.bari_jama_banam",
-                url: "/bari-jama-banam",
-                icon: "ChartLineUpIcon",
-            },
-            {
-                title: "nav.khata_index",
-                url: "/khata-index",
-                icon: "ListNumbersIcon",
-            },
-        ],
-        includeRoutes: [
-            "register",
-            "bijak",
-            "general-bill",
-            "khata",
-            "bari-detail",
-            "bari-jama-banam",
-            "khata-index"
-        ]
-    },
-    {
-        id: "cash_book",
-        title: "nav.cash_book",
-        icon: "BookBookmarkIcon",
-        isGroup: true,
-        items: [
             {
                 title: "nav.general_ledger",
                 url: "/general-ledger",
                 icon: "BookBookmarkIcon",
             },
         ],
-        includeRoutes: ["general-ledger"]
-    },
-    {
-        id: "masters",
-        title: "nav.masters",
-        icon: "DatabaseIcon",
-        isGroup: true,
-        items: [
-            {
-                title: "nav.merchants",
-                url: "/masters/merchants",
-                icon: "UsersIcon",
-            },
-            {
-                title: "nav.farmers",
-                url: "/masters/farmers",
-                icon: "UserCircleIcon",
-            },
-            {
-                title: "nav.marks",
-                url: "/masters/marks",
-                icon: "BookmarksIcon",
-            },
-            {
-                title: "nav.items",
-                url: "/masters/items",
-                icon: "PackageIcon",
-            },
-            {
-                title: "nav.areas",
-                url: "/masters/areas",
-                icon: "MapPinIcon",
-            },
-        ],
         includeRoutes: [
-            "merchants",
-            "farmers",
-            "marks",
-            "items",
-            "areas"
+            "merchant-wasooli",
+            "merchant-amroza",
+            "amroza-detail",
+            "wasooli-detail",
+            "amroza-wasooli",
+            "khata",
+            "general-ledger"
         ]
     },
     {
         id: "reports",
         title: "nav.reports",
-        icon: "PrinterIcon",
+        icon: "ChartBarIcon",
         isGroup: true,
         items: [
             {
                 title: "nav.reports",
                 url: "/reports",
-                icon: "PrinterIcon",
+                icon: "ChartBarIcon",
             },
         ],
         includeRoutes: ["reports"]
     },
     {
+        id: "setup",
+        title: "nav.setup",
+        icon: "GearSixIcon",
+        isGroup: true,
+        items: [
+            {
+                title: "nav.merchants_farmers",
+                url: "/masters/merchants",
+                icon: "UsersThreeIcon",
+            },
+            {
+                title: "nav.items_marks_areas",
+                url: "/masters/items",
+                icon: "PackageIcon",
+            },
+        ],
+        includeRoutes: [
+            "masters"
+        ]
+    },
+    {
         id: "system",
         title: "nav.system",
-        icon: "GearIcon",
+        icon: "WrenchIcon",
         isGroup: true,
         items: [
             {

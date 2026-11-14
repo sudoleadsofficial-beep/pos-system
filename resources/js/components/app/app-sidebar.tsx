@@ -44,8 +44,8 @@ export function AppSidebar() {
         sideNav.forEach(group => {
             const hasActiveRoute = group.items.some(item => item.url === url) ||
                 (group.includeRoutes && group.includeRoutes.some(r => currentRouteName.startsWith(r)));
-            // Open active group by default, or merchants group on home
-            initial[group.id] = !!hasActiveRoute || group.id === 'merchants';
+            // Open active group by default, or daily_kaam group on home
+            initial[group.id] = !!hasActiveRoute || group.id === 'daily_kaam';
         });
         return initial;
     });
@@ -104,20 +104,20 @@ export function AppSidebar() {
                                                 className={cn(
                                                     "transition-colors rounded-lg font-medium h-9 px-2.5",
                                                     isActive
-                                                        ? "bg-green-700 text-white font-semibold shadow-xs hover:bg-green-800 hover:text-white"
-                                                        : "text-sidebar-foreground hover:bg-green-50 hover:text-green-900"
+                                                        ? "bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80] font-semibold hover:bg-[#ecf5ee] hover:text-[#166534]"
+                                                        : "text-[#68736b] dark:text-[#8b968e] hover:bg-[#f0f2f0] dark:hover:bg-[#1e2420] hover:text-[#1a211c] dark:hover:text-[#e7ece8]"
                                                 )}
                                             >
                                                 <Link href={singleItem.url} className="flex items-center gap-2.5">
                                                     <Icon
                                                         name={singleItem.icon || group.icon}
-                                                        weight={isActive ? "fill" : "duotone"}
+                                                        weight={isActive ? "bold" : "regular"}
                                                         className={cn(
                                                             "!size-5 shrink-0",
-                                                            isActive ? "text-white" : "text-muted-foreground"
+                                                            isActive ? "text-[#166534] dark:text-[#4ade80]" : "text-[#68736b] dark:text-[#8b968e]"
                                                         )}
                                                     />
-                                                    <span className={cn("truncate text-xs font-medium", isUrdu && "font-nastaliq text-sm")}>
+                                                    <span className={cn("truncate text-[15px] font-medium text-black dark:text-white", isUrdu && "font-nastaliq text-[17px]")}>
                                                         {label}
                                                     </span>
                                                 </Link>
@@ -142,28 +142,25 @@ export function AppSidebar() {
                                                 <SidebarMenuButton
                                                     tooltip={groupLabel}
                                                     className={cn(
-                                                        "w-full justify-between font-semibold text-xs transition-colors rounded-lg h-9 px-2.5 cursor-pointer",
+                                                        "w-full justify-between font-medium text-xs transition-colors rounded-lg h-9 px-2.5 cursor-pointer",
                                                         groupHasActiveItem
-                                                            ? "text-green-900 font-bold bg-green-50/70"
-                                                            : "text-sidebar-foreground hover:bg-green-50/50 hover:text-green-900"
+                                                            ? "text-[#1a211c] dark:text-[#e7ece8] font-semibold"
+                                                            : "text-[#68736b] dark:text-[#8b968e] hover:bg-[#f0f2f0] dark:hover:bg-[#1e2420] hover:text-[#1a211c] dark:hover:text-[#e7ece8]"
                                                     )}
                                                 >
                                                     <div className="flex items-center gap-2.5 min-w-0">
                                                         <Icon
                                                             name={group.icon}
-                                                            weight={groupHasActiveItem ? "fill" : "duotone"}
-                                                            className={cn(
-                                                                "!size-5 shrink-0",
-                                                                groupHasActiveItem ? "text-green-700" : "text-muted-foreground"
-                                                            )}
+                                                            weight="regular"
+                                                            className="!size-5 shrink-0 text-[#68736b] dark:text-[#8b968e]"
                                                         />
-                                                        <span className={cn("truncate", isUrdu && "font-nastaliq text-sm")}>
+                                                        <span className={cn("truncate text-[15px] font-medium text-black dark:text-white", isUrdu && "font-nastaliq text-[17px]")}>
                                                             {groupLabel}
                                                         </span>
                                                     </div>
                                                     <CaretRightIcon
                                                         className={cn(
-                                                            "size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[collapsible=icon]:hidden",
+                                                            "size-3.5 shrink-0 text-[#68736b] transition-transform duration-200 group-data-[collapsible=icon]:hidden",
                                                             isExpanded && "rotate-90 rtl:rotate-90",
                                                             !isExpanded && "rtl:rotate-180"
                                                         )}
@@ -171,9 +168,12 @@ export function AppSidebar() {
                                                 </SidebarMenuButton>
                                             </CollapsibleTrigger>
                                             <CollapsibleContent>
-                                                <SidebarMenuSub className="ms-3.5 my-1 border-s border-green-200 ps-2 gap-0.5">
+                                                <SidebarMenuSub className="ms-4 my-1 border-s border-[#e6e9e6] dark:border-[#262d28] ps-2.5 gap-0.5">
                                                     {group.items.map((subItem) => {
-                                                        const isSubActive = url === subItem.url;
+                                                        const isSubActive = url === subItem.url ||
+                                                            (subItem.url === '/merchant-wasooli' && (url.startsWith('/merchant-wasooli') || url.startsWith('/merchant-amroza') || url.startsWith('/amroza-detail') || url.startsWith('/wasooli-detail') || url.startsWith('/amroza-wasooli'))) ||
+                                                            (subItem.url === '/masters/merchants' && (url.startsWith('/masters/merchants') || url.startsWith('/masters/farmers'))) ||
+                                                            (subItem.url === '/masters/items' && (url.startsWith('/masters/items') || url.startsWith('/masters/marks') || url.startsWith('/masters/areas')));
                                                         const subLabel = t(subItem.title);
 
                                                         return (
@@ -182,22 +182,14 @@ export function AppSidebar() {
                                                                     asChild
                                                                     isActive={isSubActive}
                                                                     className={cn(
-                                                                        "rounded-md py-1.5 px-2 transition-colors text-xs font-medium h-8",
+                                                                        "rounded-md py-1.5 px-2.5 transition-colors text-xs font-medium h-8",
                                                                         isSubActive
-                                                                            ? "bg-green-700 text-white font-semibold shadow-xs hover:bg-green-800 hover:text-white"
-                                                                            : "text-sidebar-foreground/80 hover:bg-green-50 hover:text-green-900"
+                                                                            ? "bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80] font-semibold hover:bg-[#ecf5ee] hover:text-[#166534]"
+                                                                            : "text-[#68736b] dark:text-[#8b968e] hover:bg-[#f0f2f0] dark:hover:bg-[#1e2420] hover:text-[#1a211c] dark:hover:text-[#e7ece8]"
                                                                     )}
                                                                 >
                                                                     <Link href={subItem.url} className="flex items-center gap-2">
-                                                                        <Icon
-                                                                            name={subItem.icon}
-                                                                            weight={isSubActive ? "fill" : "duotone"}
-                                                                            className={cn(
-                                                                                "!size-4 shrink-0",
-                                                                                isSubActive ? "text-white" : "text-muted-foreground"
-                                                                            )}
-                                                                        />
-                                                                        <span className={cn("truncate", isUrdu && "font-nastaliq text-xs")}>
+                                                                        <span className={cn("truncate text-[15px] font-medium text-black dark:text-white", isUrdu && "font-nastaliq text-[16px]")}>
                                                                             {subLabel}
                                                                         </span>
                                                                     </Link>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
 import ListPicker, { type PickerItem } from '@/components/app/list-picker';
+import MandiPageHeader from '@/components/app/mandi-page-header';
 import { toast } from 'sonner';
 
 interface MerchantOption {
@@ -139,8 +140,8 @@ export default function AmrozaIndex({
     const submitBtnRef = useRef<HTMLButtonElement>(null);
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: isUrdu ? 'خریدار کھاتہ' : 'Buyer Ledger', href: '#' },
-        { title: isUrdu ? 'آج کی بکری (امروزہ)' : "Today's Sales", href: '/amroza' },
+        { title: isUrdu ? 'Ø®Ø±ÛŒØ¯Ø§Ø± Ú©Ú¾Ø§ØªÛ' : 'Buyer Ledger', href: '#' },
+        { title: isUrdu ? 'Ø¢Ø¬ Ú©ÛŒ Ø¨Ú©Ø±ÛŒ (Ø§Ù…Ø±ÙˆØ²Û)' : "Today's Sales", href: '/amroza' },
     ];
 
     // INITIAL STATE: No payment type selected, no item pre-selected
@@ -248,11 +249,11 @@ export default function AmrozaIndex({
 
     const missingFields = useMemo(() => {
         const list: string[] = [];
-        if (!data.payment_type) list.push(isUrdu ? 'ادائیگی' : 'Payment');
-        if (!data.merchant_id) list.push(isUrdu ? 'خریدار' : 'Buyer');
-        if (!data.item_id) list.push(isUrdu ? 'مال' : 'Item');
-        if (numNag <= 0) list.push(isUrdu ? 'تعداد' : 'Units');
-        if (numRate <= 0) list.push(isUrdu ? 'ریٹ' : 'Rate');
+        if (!data.payment_type) list.push(isUrdu ? 'Ø§Ø¯Ø§Ø¦ÛŒÚ¯ÛŒ' : 'Payment');
+        if (!data.merchant_id) list.push(isUrdu ? 'Ø®Ø±ÛŒØ¯Ø§Ø±' : 'Buyer');
+        if (!data.item_id) list.push(isUrdu ? 'Ù…Ø§Ù„' : 'Item');
+        if (numNag <= 0) list.push(isUrdu ? 'ØªØ¹Ø¯Ø§Ø¯' : 'Units');
+        if (numRate <= 0) list.push(isUrdu ? 'Ø±ÛŒÙ¹' : 'Rate');
         return list;
     }, [data.payment_type, data.merchant_id, data.item_id, numNag, numRate, isUrdu]);
 
@@ -297,7 +298,7 @@ export default function AmrozaIndex({
     function handleSelectPayment(type: 'naqdi' | 'udhaar') {
         setData('payment_type', type);
         setActiveTooltipStep(null);
-        toast.info(isUrdu ? (type === 'naqdi' ? 'نقد منتخب ہوا' : 'ادھار منتخب ہوا') : (type === 'naqdi' ? 'Cash Selected' : 'Credit Selected'));
+        toast.info(isUrdu ? (type === 'naqdi' ? 'Ù†Ù‚Ø¯ Ù…Ù†ØªØ®Ø¨ ÛÙˆØ§' : 'Ø§Ø¯Ú¾Ø§Ø± Ù…Ù†ØªØ®Ø¨ ÛÙˆØ§') : (type === 'naqdi' ? 'Cash Selected' : 'Credit Selected'));
 
         setTimeout(() => {
             const input = stepBuyerRef.current?.querySelector('input');
@@ -362,7 +363,7 @@ export default function AmrozaIndex({
         if (numNag >= 500 && numWeight > 0 && numWeight <= 20) {
             setAnomalyWarningMsg(
                 isUrdu
-                    ? `آپ نے ${numNag} تعداد درج کی ہے جبکہ وزن صرف ${numWeight} ہے! کیا یہ صحیح ہے؟`
+                    ? `Ø¢Ù¾ Ù†Û’ ${numNag} ØªØ¹Ø¯Ø§Ø¯ Ø¯Ø±Ø¬ Ú©ÛŒ ÛÛ’ Ø¬Ø¨Ú©Û ÙˆØ²Ù† ØµØ±Ù ${numWeight} ÛÛ’! Ú©ÛŒØ§ ÛŒÛ ØµØ­ÛŒØ­ ÛÛ’ØŸ`
                     : `You entered ${numNag} Units with only ${numWeight} weight! Is this correct?`
             );
             setAnomalyConfirmOpen(true);
@@ -372,7 +373,7 @@ export default function AmrozaIndex({
         if (numWeight >= 1000 && numNag > 0 && numNag <= 2) {
             setAnomalyWarningMsg(
                 isUrdu
-                    ? `آپ نے ${numWeight} وزن درج کیا ہے جبکہ تعداد صرف ${numNag} ہے! کیا یہ صحیح ہے؟`
+                    ? `Ø¢Ù¾ Ù†Û’ ${numWeight} ÙˆØ²Ù† Ø¯Ø±Ø¬ Ú©ÛŒØ§ ÛÛ’ Ø¬Ø¨Ú©Û ØªØ¹Ø¯Ø§Ø¯ ØµØ±Ù ${numNag} ÛÛ’! Ú©ÛŒØ§ ÛŒÛ ØµØ­ÛŒØ­ ÛÛ’ØŸ`
                     : `You entered ${numWeight} Weight with only ${numNag} Units! Is this correct?`
             );
             setAnomalyConfirmOpen(true);
@@ -391,7 +392,7 @@ export default function AmrozaIndex({
             put(`/merchants/amroza/${editingSale.id}`, {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success(isUrdu ? 'ریکارڈ کامیابی سے تبدیل ہو گیا!' : 'Saved successfully!');
+                    toast.success(isUrdu ? 'Ø±ÛŒÚ©Ø§Ø±Úˆ Ú©Ø§Ù…ÛŒØ§Ø¨ÛŒ Ø³Û’ ØªØ¨Ø¯ÛŒÙ„ ÛÙˆ Ú¯ÛŒØ§!' : 'Saved successfully!');
                     setEditingSale(null);
                     resetForm('', currentDate);
                 },
@@ -400,7 +401,7 @@ export default function AmrozaIndex({
             post('/merchants/amroza', {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success(isUrdu ? 'نیا اندراج شامل ہو گیا!' : 'Added successfully!');
+                    toast.success(isUrdu ? 'Ù†ÛŒØ§ Ø§Ù†Ø¯Ø±Ø§Ø¬ Ø´Ø§Ù…Ù„ ÛÙˆ Ú¯ÛŒØ§!' : 'Added successfully!');
                     resetForm('', currentDate);
                 },
             });
@@ -467,9 +468,9 @@ export default function AmrozaIndex({
             preserveScroll: true,
             onSuccess: () => {
                 setUndoSale(target);
-                toast.success(isUrdu ? 'انٹری حذف کر دی گئی' : 'Entry deleted', {
+                toast.success(isUrdu ? 'Ø§Ù†Ù¹Ø±ÛŒ Ø­Ø°Ù Ú©Ø± Ø¯ÛŒ Ú¯Ø¦ÛŒ' : 'Entry deleted', {
                     action: {
-                        label: isUrdu ? 'واپس لائیں (Undo 5s)' : 'Undo (5s)',
+                        label: isUrdu ? 'ÙˆØ§Ù¾Ø³ Ù„Ø§Ø¦ÛŒÚº (Undo 5s)' : 'Undo (5s)',
                         onClick: () => handleUndo(target),
                     },
                     duration: 5000,
@@ -496,7 +497,7 @@ export default function AmrozaIndex({
         }, {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success(isUrdu ? 'انٹری بحال ہو گئی!' : 'Entry restored!');
+                toast.success(isUrdu ? 'Ø§Ù†Ù¹Ø±ÛŒ Ø¨Ø­Ø§Ù„ ÛÙˆ Ú¯Ø¦ÛŒ!' : 'Entry restored!');
                 setUndoSale(null);
             },
         });
@@ -508,12 +509,12 @@ export default function AmrozaIndex({
     }
 
     function getWhatsAppUrl(sale: Sale): string {
-        const pType = sale.payment_type === 'naqdi' ? (isUrdu ? 'نقد' : 'Cash') : (isUrdu ? 'ادھار' : 'Credit');
+        const pType = sale.payment_type === 'naqdi' ? (isUrdu ? 'Ù†Ù‚Ø¯' : 'Cash') : (isUrdu ? 'Ø§Ø¯Ú¾Ø§Ø±' : 'Credit');
         const mName = isUrdu ? (sale.merchant?.name_ur || sale.merchant?.name_en) : (sale.merchant?.name_en || sale.merchant?.name_ur);
         const iName = isUrdu ? (sale.item?.name_ur || sale.item?.name_en) : (sale.item?.name_en || sale.item?.name_ur);
         const phone = (sale.merchant as any)?.phone || '';
 
-        const text = `*Jaffer Khan & Brother Company - Sales Slip*
+        const text = `*Vegetable POS - Sales Slip*
 -------------------------
 Date: ${sale.date}
 Buyer: ${sale.merchant?.code} - ${mName}
@@ -538,7 +539,7 @@ Thank you!`;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isUrdu ? 'آج کی بکری (امروزہ)' : "Today's Sales"} />
+            <Head title={isUrdu ? 'Ø¢Ø¬ Ú©ÛŒ Ø¨Ú©Ø±ÛŒ (Ø§Ù…Ø±ÙˆØ²Û)' : "Today's Sales"} />
 
             <style>{`
                 @keyframes gentle-pulse {
@@ -578,101 +579,91 @@ Thank you!`;
                 }
             `}</style>
 
-            <div className="-mt-3 md:-mt-6 -mx-3 md:-mx-6 pb-24 bg-[#eef2ee] min-h-screen" dir={isUrdu ? 'rtl' : 'ltr'}>
+            <div className="-mt-3 md:-mt-6 -mx-3 md:-mx-6 pb-24 bg-[#eef2ee] min-h-screen font-sans text-[#1a211c] dark:text-[#e7ece8]" dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* 1. Dark Green Top Header Banner */}
-                <div className="bg-[#14532d] px-4 md:px-8 pt-6 pb-16 md:pb-20 text-white shadow-sm">
-                    <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <h1 className={`text-2xl md:text-3xl font-extrabold text-white tracking-tight ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {isUrdu ? 'آج کی بکری (امروزہ)' : "Today's Sales"}
-                            </h1>
-                            <p className={`text-emerald-100/80 text-xs md:text-sm font-medium mt-1 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {isUrdu ? 'آج کی سیل اینٹری · امروزہ' : 'Aaj ki sale entry · Amroza'}
-                            </p>
-                        </div>
-
-                        {/* Date Picker + Quick Buttons */}
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setQuickDate(0)}
-                                className={`h-10 px-5 rounded-xl text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
-                            >
-                                {isUrdu ? 'آج' : 'Today'}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setQuickDate(-1)}
-                                className={`h-10 px-5 rounded-xl text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
-                            >
-                                {isUrdu ? 'گزشتہ کل' : 'Yesterday'}
-                            </button>
-                            <div className="relative flex items-center">
-                                <input
-                                    type="date"
-                                    value={selectedDate}
-                                    onChange={e => handleDateChange(e.target.value)}
-                                    className="h-10 w-36 rounded-xl bg-white text-gray-900 font-bold text-sm cursor-pointer shadow-xs px-3 text-center border-0 outline-none"
-                                />
-                            </div>
-                        </div>
+                <MandiPageHeader
+                    title={isUrdu ? 'Ø¢Ø¬ Ú©ÛŒ Ø¨Ú©Ø±ÛŒ (Ø§Ù…Ø±ÙˆØ²Û)' : "Today's Sales"}
+                    subtitle={isUrdu ? "آج کی سیل اینٹری (امروزہ)" : "Aaj ki sale entry (Amroza)"}
+                    isUrdu={isUrdu}
+                >
+                    <button
+                        type="button"
+                        onClick={() => setQuickDate(0)}
+                        className={`h-9 px-4 rounded-xl text-xs md:text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
+                    >
+                        {isUrdu ? 'Ø¢Ø¬' : 'Today'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setQuickDate(-1)}
+                        className={`h-9 px-4 rounded-xl text-xs md:text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
+                    >
+                        {isUrdu ? 'Ú¯Ø²Ø´ØªÛ Ú©Ù„' : 'Yesterday'}
+                    </button>
+                    <div className="relative flex items-center">
+                        <input
+                            type="date"
+                            value={selectedDate}
+                            onChange={e => handleDateChange(e.target.value)}
+                            className="h-9 w-32 rounded-xl bg-white text-gray-900 font-bold text-xs md:text-sm cursor-pointer shadow-xs px-2.5 text-center border-0 outline-none"
+                        />
                     </div>
-                </div>
+                </MandiPageHeader>
 
                 {/* Form & Records Container */}
-                <div className="max-w-7xl mx-auto px-3 md:px-6 -mt-10 md:-mt-12 space-y-6">
+                <div className="max-w-7xl mx-auto px-3 md:px-6 -mt-6 md:-mt-8 space-y-3.5">
                     {/* 2. Main Entry Form & Bill Preview Grid */}
                     <form onSubmit={attemptSubmit}>
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
                             
                             {/* LEFT CARD: Form Entry */}
-                            <div className="lg:col-span-7 bg-white rounded-3xl p-6 md:p-7 border border-gray-100 shadow-md space-y-5">
+                            <div className="lg:col-span-7 bg-white rounded-xl p-4 md:p-5 border border-gray-200/80 shadow-xs space-y-3.5">
                                 
                                 {/* 1. PAYMENT TYPE */}
                                 <div ref={stepPaymentRef} className={`transition-all ${flashingStep === 'payment' ? 'shake-error rounded-2xl p-2 bg-red-50/80' : ''}`}>
-                                    <div className="flex items-center gap-2 mb-2.5">
+                                    <div className="flex items-center gap-2 mb-2">
                                         <span className="w-5 h-5 rounded-full bg-[#1e713e] text-white text-[11px] font-bold flex items-center justify-center shrink-0">1</span>
                                         <label className={`text-xs font-bold text-gray-700 uppercase tracking-wider ${isUrdu ? 'font-nastaliq text-sm' : ''}`}>
-                                            {isUrdu ? 'ادائیگی کا طریقہ (PAYMENT TYPE)' : 'PAYMENT TYPE'}
+                                            {isUrdu ? 'Ø§Ø¯Ø§Ø¦ÛŒÚ¯ÛŒ Ú©Ø§ Ø·Ø±ÛŒÙ‚Û (PAYMENT TYPE)' : 'PAYMENT TYPE'}
                                         </label>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <button
                                             type="button"
                                             onClick={() => handleSelectPayment('naqdi')}
-                                            className={`h-14 rounded-2xl font-bold flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                                            className={`h-10 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                                                 data.payment_type === 'naqdi'
-                                                    ? 'bg-[#1e713e] text-white shadow-md'
-                                                    : 'bg-white text-gray-800 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
+                                                    ? 'bg-[#1e713e] text-white shadow-xs'
+                                                    : 'bg-white text-gray-800 border border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
                                             }`}
                                         >
-                                            <Icon name="Money" className="size-5" weight={data.payment_type === 'naqdi' ? 'fill' : 'regular'} />
-                                            <span className="text-sm md:text-base">{isUrdu ? 'نقد (Cash)' : 'Cash'}</span>
-                                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md ${data.payment_type === 'naqdi' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>F1</span>
+                                            <Icon name="Money" className="size-4" weight={data.payment_type === 'naqdi' ? 'fill' : 'regular'} />
+                                            <span className="text-xs md:text-sm">{isUrdu ? 'Ù†Ù‚Ø¯ (Cash)' : 'Cash'}</span>
+                                            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${data.payment_type === 'naqdi' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>F1</span>
                                         </button>
 
                                         <button
                                             type="button"
                                             onClick={() => handleSelectPayment('udhaar')}
-                                            className={`h-14 rounded-2xl font-bold flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                                            className={`h-10 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                                                 data.payment_type === 'udhaar'
-                                                    ? 'bg-[#1e713e] text-white shadow-md'
-                                                    : 'bg-white text-gray-800 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
+                                                    ? 'bg-[#1e713e] text-white shadow-xs'
+                                                    : 'bg-white text-gray-800 border border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
                                             }`}
                                         >
-                                            <Icon name="CreditCard" className="size-5" weight={data.payment_type === 'udhaar' ? 'fill' : 'regular'} />
-                                            <span className="text-sm md:text-base">{isUrdu ? 'ادھار (Credit)' : 'Credit'}</span>
-                                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md ${data.payment_type === 'udhaar' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>F2</span>
+                                            <Icon name="CreditCard" className="size-4" weight={data.payment_type === 'udhaar' ? 'fill' : 'regular'} />
+                                            <span className="text-xs md:text-sm">{isUrdu ? 'Ø§Ø¯Ú¾Ø§Ø± (Credit)' : 'Credit'}</span>
+                                            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${data.payment_type === 'udhaar' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>F2</span>
                                         </button>
                                     </div>
                                 </div>
 
                                 {/* 2. BUYER */}
                                 <div ref={stepBuyerRef} className={`transition-all ${flashingStep === 'buyer' ? 'shake-error rounded-2xl p-2 bg-red-50/80' : ''}`}>
-                                    <div className="flex items-center gap-2 mb-2.5">
+                                    <div className="flex items-center gap-2 mb-2">
                                         <span className="w-5 h-5 rounded-full bg-[#1e713e] text-white text-[11px] font-bold flex items-center justify-center shrink-0">2</span>
                                         <label className={`text-xs font-bold text-gray-700 uppercase tracking-wider ${isUrdu ? 'font-nastaliq text-sm' : ''}`}>
-                                            {isUrdu ? 'خریدار (BUYER)' : 'BUYER'}
+                                            {isUrdu ? 'Ø®Ø±ÛŒØ¯Ø§Ø± (BUYER)' : 'BUYER'}
                                         </label>
                                     </div>
                                     <div ref={buyerContainerRef} className="relative">
@@ -717,17 +708,17 @@ Thank you!`;
                                                     setBuyerDropdownOpen(false);
                                                 }
                                             }}
-                                            placeholder={isUrdu ? 'کوڈ یا نام لکھیں...' : 'Code ya naam likhein...'}
-                                            className={`h-14 rounded-2xl border-gray-200 px-4 pe-11 text-sm md:text-base bg-white text-gray-900 placeholder:text-gray-400 focus:border-[#1e713e] shadow-xs ${!isBuyerUnlocked ? 'opacity-40 cursor-not-allowed bg-gray-50' : ''}`}
+                                            placeholder={isUrdu ? 'Ú©ÙˆÚˆ ÛŒØ§ Ù†Ø§Ù… Ù„Ú©Ú¾ÛŒÚº...' : 'Code ya naam likhein...'}
+                                            className={`h-10 rounded-xl border-gray-200 px-3 pe-10 text-xs md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:border-[#1e713e] shadow-xs ${!isBuyerUnlocked ? 'opacity-40 cursor-not-allowed bg-gray-50' : ''}`}
                                         />
-                                        <Icon name="MagnifyingGlass" className="size-5 text-gray-400 absolute end-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                        <Icon name="MagnifyingGlass" className="size-4 text-gray-400 absolute end-3 top-1/2 -translate-y-1/2 pointer-events-none" />
 
                                         {/* Dropdown list */}
                                         {isBuyerUnlocked && buyerDropdownOpen && (
                                             <div className="absolute z-50 start-0 end-0 mt-1 max-h-56 overflow-y-auto bg-white rounded-2xl border border-gray-200 shadow-xl divide-y divide-gray-100">
                                                 {filteredMerchants.length === 0 ? (
                                                     <div className="p-3 text-xs text-gray-500 text-center">
-                                                        {isUrdu ? 'کوئی خریدار نہیں ملا' : 'No buyer found'}
+                                                        {isUrdu ? 'Ú©ÙˆØ¦ÛŒ Ø®Ø±ÛŒØ¯Ø§Ø± Ù†ÛÛŒÚº Ù…Ù„Ø§' : 'No buyer found'}
                                                     </div>
                                                 ) : (
                                                     filteredMerchants.map(m => (
@@ -758,15 +749,15 @@ Thank you!`;
                                         )}
 
                                         {currentMerchant && (
-                                            <div className="mt-1.5 text-xs text-gray-600 flex items-center gap-1.5 px-1">
-                                                <span className="text-[#1e713e] font-bold">✓</span>
-                                                <span className={`font-semibold text-gray-900 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                            <div className="mt-1.5 text-xs text-gray-700 flex items-center gap-1.5 px-1 font-sans">
+                                                <Icon name="CheckCircle" className="size-3.5 text-[#1e713e]" weight="bold" />
+                                                <span className={`font-bold text-gray-900 ${isUrdu ? 'font-nastaliq' : ''}`}>
                                                     {isUrdu ? (currentMerchant.name_ur || currentMerchant.name_en) : (currentMerchant.name_en || currentMerchant.name_ur)}
                                                 </span>
                                                 <span className="font-mono text-gray-500">(#{currentMerchant.code})</span>
-                                                <span className="text-gray-300">—</span>
+                                                <span className="text-gray-400">|</span>
                                                 <span className="text-gray-500">{isUrdu ? 'بقایا:' : 'Balance:'}</span>
-                                                <span className="font-mono font-bold text-gray-900">
+                                                <span className="font-mono font-bold text-emerald-800">
                                                     Rs. {Number(currentMerchant.current_balance).toLocaleString()}
                                                 </span>
                                             </div>
@@ -793,7 +784,7 @@ Thank you!`;
                                     <div className="flex items-center gap-2 mb-2.5">
                                         <span className="w-5 h-5 rounded-full bg-[#1e713e] text-white text-[11px] font-bold flex items-center justify-center shrink-0">3</span>
                                         <label className={`text-xs font-bold text-gray-700 uppercase tracking-wider ${isUrdu ? 'font-nastaliq text-sm' : ''}`}>
-                                            {isUrdu ? 'مال / آئٹم (ITEM)' : 'ITEM'}
+                                            {isUrdu ? 'Ù…Ø§Ù„ / Ø¢Ø¦Ù¹Ù… (ITEM)' : 'ITEM'}
                                         </label>
                                     </div>
 
@@ -812,18 +803,18 @@ Thank you!`;
                                                     disabled={!isItemUnlocked}
                                                     tabIndex={!isItemUnlocked ? -1 : 0}
                                                     onClick={() => handleItemSelect(item)}
-                                                    className={`h-14 px-3 rounded-2xl border transition-all flex items-center gap-2.5 cursor-pointer ${
+                                                    className={`h-10 px-2.5 rounded-xl border transition-all flex items-center gap-2 cursor-pointer ${
                                                         isSelected
-                                                            ? 'bg-[#1e713e] text-white border-[#1e713e] shadow-sm font-bold'
+                                                            ? 'bg-[#1e713e] text-white border-[#1e713e] shadow-xs font-bold'
                                                             : 'bg-white text-gray-800 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
                                                     }`}
                                                 >
-                                                    <span className={`w-7 h-7 rounded-lg text-xs font-black flex items-center justify-center shrink-0 ${
+                                                    <span className={`w-6 h-6 rounded-md text-[10px] font-black flex items-center justify-center shrink-0 ${
                                                         isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100/70 text-emerald-800'
                                                     }`}>
                                                         {initial}
                                                     </span>
-                                                    <span className={`text-xs md:text-sm font-semibold truncate ${isUrdu ? 'font-nastaliq font-bold' : ''}`}>
+                                                    <span className={`text-xs font-semibold truncate ${isUrdu ? 'font-nastaliq font-bold' : ''}`}>
                                                         {displayName}
                                                     </span>
                                                 </button>
@@ -834,7 +825,7 @@ Thank you!`;
                                     {items.length > 6 && (
                                         <div className="mt-2.5 flex items-center gap-2">
                                             <span className={`text-xs text-gray-400 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                {isUrdu ? 'دیگر آئٹم:' : 'Other:'}
+                                                {isUrdu ? 'Ø¯ÛŒÚ¯Ø± Ø¢Ø¦Ù¹Ù…:' : 'Other:'}
                                             </span>
                                             <select
                                                 disabled={!isItemUnlocked}
@@ -846,7 +837,7 @@ Thank you!`;
                                                 }}
                                                 className={`h-9 text-xs rounded-xl border border-gray-200 bg-white px-2.5 flex-1 max-w-xs text-gray-700 ${isUrdu ? 'font-nastaliq' : ''}`}
                                             >
-                                                <option value="">{isUrdu ? 'آئٹم چنیں...' : 'Choose item...'}</option>
+                                                <option value="">{isUrdu ? 'Ø¢Ø¦Ù¹Ù… Ú†Ù†ÛŒÚº...' : 'Choose item...'}</option>
                                                 {items.map(it => (
                                                     <option key={it.id} value={it.id}>
                                                         {it.code} - {isUrdu ? it.name_ur : it.name_en}
@@ -873,7 +864,7 @@ Thank you!`;
                                     <div className="flex items-center gap-2 mb-2.5">
                                         <span className="w-5 h-5 rounded-full bg-[#1e713e] text-white text-[11px] font-bold flex items-center justify-center shrink-0">4</span>
                                         <label className={`text-xs font-bold text-gray-700 uppercase tracking-wider ${isUrdu ? 'font-nastaliq text-sm' : ''}`}>
-                                            {isUrdu ? 'مقدار اور ریٹ (QUANTITY)' : 'QUANTITY'}
+                                            {isUrdu ? 'Ù…Ù‚Ø¯Ø§Ø± Ø§ÙˆØ± Ø±ÛŒÙ¹ (QUANTITY)' : 'QUANTITY'}
                                         </label>
                                     </div>
 
@@ -881,12 +872,12 @@ Thank you!`;
                                         {/* UNITS */}
                                         <div
                                             ref={stepUnitsRef}
-                                            className={`h-14 rounded-2xl border bg-white flex items-center justify-between px-4 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20 ${
+                                            className={`h-10 rounded-xl border bg-white flex items-center justify-between px-3 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20 ${
                                                 flashingStep === 'units' ? 'shake-error border-red-500 bg-red-50/50' : 'border-gray-200'
                                             }`}
                                         >
-                                            <span className={`text-sm font-medium text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                {isUrdu ? 'تعداد' : 'Units'}
+                                            <span className={`text-xs font-semibold text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                {isUrdu ? 'ØªØ¹Ø¯Ø§Ø¯' : 'Units'}
                                             </span>
                                             <input
                                                 ref={nagRef}
@@ -904,7 +895,7 @@ Thank you!`;
                                                     }
                                                 }}
                                                 placeholder="0"
-                                                className="w-24 text-end font-mono font-bold text-gray-900 bg-transparent text-base focus:outline-none placeholder:text-gray-400"
+                                                className="w-20 text-end font-mono font-bold text-gray-900 bg-transparent text-sm tabular-nums focus:outline-none placeholder:text-gray-400"
                                                 required
                                             />
                                         </div>
@@ -912,12 +903,12 @@ Thank you!`;
                                         {/* WEIGHT */}
                                         <div
                                             ref={stepWeightRef}
-                                            className={`h-14 rounded-2xl border bg-white flex items-center justify-between px-4 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20 ${
+                                            className={`h-10 rounded-xl border bg-white flex items-center justify-between px-3 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20 ${
                                                 flashingStep === 'weight' ? 'shake-error border-red-500 bg-red-50/50' : 'border-gray-200'
                                             }`}
                                         >
-                                            <span className={`text-sm font-medium text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                {isUrdu ? 'وزن' : 'Weight'}
+                                            <span className={`text-xs font-semibold text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                {isUrdu ? 'ÙˆØ²Ù†' : 'Weight'}
                                             </span>
                                             <input
                                                 ref={weightRef}
@@ -935,14 +926,14 @@ Thank you!`;
                                                     }
                                                 }}
                                                 placeholder="0.00"
-                                                className="w-24 text-end font-mono font-bold text-gray-900 bg-transparent text-base focus:outline-none placeholder:text-gray-400"
+                                                className="w-20 text-end font-mono font-bold text-gray-900 bg-transparent text-sm tabular-nums focus:outline-none placeholder:text-gray-400"
                                             />
                                         </div>
 
                                         {/* RATE */}
                                         <div
                                             ref={stepRateRef}
-                                            className={`h-14 rounded-2xl border bg-white flex items-center justify-between px-4 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20 ${
+                                            className={`h-10 rounded-xl border bg-white flex items-center justify-between px-3 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20 ${
                                                 flashingStep === 'rate'
                                                     ? 'shake-error border-red-500 bg-red-50/50'
                                                     : isRateUnusual
@@ -950,8 +941,8 @@ Thank you!`;
                                                     : 'border-gray-200'
                                             }`}
                                         >
-                                            <span className={`text-sm font-medium text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                {isUrdu ? 'ریٹ' : 'Rate'}
+                                            <span className={`text-xs font-semibold text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                {isUrdu ? 'Ø±ÛŒÙ¹' : 'Rate'}
                                             </span>
                                             <div className="flex items-center gap-1 font-mono font-bold text-gray-900">
                                                 <span className="text-xs text-gray-400">Rs.</span>
@@ -971,7 +962,7 @@ Thank you!`;
                                                         }
                                                     }}
                                                     placeholder="0"
-                                                    className="w-20 text-end font-mono font-bold text-gray-900 bg-transparent text-base focus:outline-none placeholder:text-gray-400"
+                                                    className="w-20 text-end font-mono font-bold text-gray-900 bg-transparent text-sm tabular-nums focus:outline-none placeholder:text-gray-400"
                                                     required
                                                 />
                                             </div>
@@ -981,7 +972,7 @@ Thank you!`;
                                     {/* Optional Packing Charges Row */}
                                     <div className="mt-2.5 flex items-center justify-end gap-2 text-xs text-gray-500">
                                         <label className={isUrdu ? 'font-nastaliq' : ''}>
-                                            {isUrdu ? 'بوری خرچہ (اختیاری):' : 'Packing (optional):'}
+                                            {isUrdu ? 'Ø¨ÙˆØ±ÛŒ Ø®Ø±Ú†Û (Ø§Ø®ØªÛŒØ§Ø±ÛŒ):' : 'Packing (optional):'}
                                         </label>
                                         <Input
                                             ref={bardanaRef}
@@ -1006,16 +997,16 @@ Thank you!`;
                             </div>
 
                             {/* RIGHT CARD: Bill Preview */}
-                            <div className="lg:col-span-5 bg-white rounded-3xl p-6 md:p-7 border border-gray-100 shadow-md flex flex-col justify-between">
+                            <div className="lg:col-span-5 bg-white rounded-2xl p-5 md:p-6 border border-gray-200/80 shadow-xs flex flex-col justify-between">
                                 <div>
-                                    <div className="flex items-center gap-2.5 mb-5">
-                                        <Icon name="Receipt" className="size-5 text-[#1e713e]" weight="bold" />
-                                        <h3 className={`text-base font-bold text-gray-900 ${isUrdu ? 'font-nastaliq text-lg' : ''}`}>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <Icon name="Receipt" className="size-4 text-[#1e713e]" weight="bold" />
+                                        <h3 className={`text-sm font-bold text-gray-900 ${isUrdu ? 'font-nastaliq text-base' : ''}`}>
                                             {isUrdu ? 'بل کی تفصیل (Bill Preview)' : 'Bill Preview'}
                                         </h3>
                                     </div>
 
-                                    <div className="space-y-3.5 text-sm">
+                                    <div className="space-y-2.5 text-xs">
                                         <div className="flex justify-between items-center text-gray-600">
                                             <span className={isUrdu ? 'font-nastaliq' : 'font-medium'}>{isUrdu ? 'طریقہ ادائیگی' : 'Payment'}</span>
                                             <span className="font-bold text-gray-900">
@@ -1023,7 +1014,7 @@ Thank you!`;
                                                     ? (data.payment_type === 'naqdi'
                                                         ? (isUrdu ? 'نقد (Cash)' : 'Cash')
                                                         : (isUrdu ? 'ادھار (Credit)' : 'Credit'))
-                                                    : '—'}
+                                                    : '-'}
                                             </span>
                                         </div>
                                         <div className="border-t border-dashed border-gray-200" />
@@ -1033,7 +1024,7 @@ Thank you!`;
                                             <span className={`font-bold text-gray-900 truncate max-w-[200px] ${isUrdu ? 'font-nastaliq' : ''}`}>
                                                 {currentMerchant
                                                     ? (isUrdu ? (currentMerchant.name_ur || currentMerchant.name_en) : (currentMerchant.name_en || currentMerchant.name_ur))
-                                                    : '—'}
+                                                    : '-'}
                                             </span>
                                         </div>
                                         <div className="border-t border-dashed border-gray-200" />
@@ -1043,19 +1034,19 @@ Thank you!`;
                                             <span className={`font-bold text-gray-900 truncate max-w-[200px] ${isUrdu ? 'font-nastaliq' : ''}`}>
                                                 {currentItem
                                                     ? (isUrdu ? (currentItem.name_ur || currentItem.name_en) : (currentItem.name_en || currentItem.name_ur))
-                                                    : '—'}
+                                                    : '-'}
                                             </span>
                                         </div>
                                         <div className="border-t border-dashed border-gray-200" />
 
                                         <div className="flex justify-between items-center text-gray-600">
-                                            <span className={isUrdu ? 'font-nastaliq' : 'font-medium'}>{isUrdu ? 'تعداد × ریٹ' : 'Units × Rate'}</span>
-                                            <span className="font-mono font-bold text-gray-900" dir="ltr">
-                                                {numWeight > 0
-                                                    ? `${numWeight} × ${numRate.toLocaleString()} = ${(numWeight * numRate).toLocaleString()}`
+                                            <span className={isUrdu ? 'font-nastaliq' : 'font-medium'}>{isUrdu ? 'تعداد x ریٹ' : 'Units x Rate'}</span>
+                                            <span className="font-mono font-bold text-gray-900 tabular-nums" dir="ltr">
+                                                {numWeight > 0 && numRate > 0
+                                                    ? `${numWeight} x ${numRate.toLocaleString()} = Rs. ${(numWeight * numRate).toLocaleString()}`
                                                     : numNag > 0 && numRate > 0
-                                                    ? `${numNag} × ${numRate.toLocaleString()} = ${(numNag * numRate).toLocaleString()}`
-                                                    : '0 × 0 = 0'}
+                                                    ? `${numNag} x ${numRate.toLocaleString()} = Rs. ${(numNag * numRate).toLocaleString()}`
+                                                    : '0 x 0 = Rs. 0'}
                                             </span>
                                         </div>
 
@@ -1064,7 +1055,7 @@ Thank you!`;
                                                 <div className="border-t border-dashed border-gray-200" />
                                                 <div className="flex justify-between items-center text-gray-600">
                                                     <span className={isUrdu ? 'font-nastaliq' : 'font-medium'}>{isUrdu ? 'بوری خرچہ' : 'Packing'}</span>
-                                                    <span className="font-mono font-bold text-gray-900" dir="ltr">
+                                                    <span className="font-mono font-bold text-gray-900 tabular-nums" dir="ltr">
                                                         Rs. {numBardana.toLocaleString()}
                                                     </span>
                                                 </div>
@@ -1073,12 +1064,12 @@ Thank you!`;
                                     </div>
                                 </div>
 
-                                <div className="mt-6 space-y-4">
-                                    <div className="bg-[#eef6f0] rounded-2xl p-4 flex items-center justify-between">
-                                        <span className={`text-xs font-bold text-gray-600 uppercase tracking-wider ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                            {isUrdu ? 'کل رقم' : 'TOTAL'}
+                                <div className="mt-5 space-y-3">
+                                    <div className="bg-[#eef6f0] rounded-xl p-3 flex items-center justify-between">
+                                        <span className={`text-[11px] font-bold text-gray-600 uppercase tracking-wider ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                            {isUrdu ? 'Ú©Ù„ Ø±Ù‚Ù…' : 'TOTAL'}
                                         </span>
-                                        <div className="text-3xl font-black font-mono text-[#14532d]" dir="ltr">
+                                        <div className="text-2xl font-bold font-mono tabular-nums text-[#14532d]" dir="ltr">
                                             Rs. {grossAmount.toLocaleString()}
                                         </div>
                                     </div>
@@ -1089,34 +1080,34 @@ Thank you!`;
                                                 type="button"
                                                 variant="outline"
                                                 onClick={() => resetForm()}
-                                                className="h-14 px-4 rounded-2xl border-red-300 text-red-600 hover:bg-red-50 font-bold"
+                                                className="h-10 px-4 rounded-xl border-red-300 text-red-600 hover:bg-red-50 text-xs font-semibold"
                                             >
-                                                {isUrdu ? 'منسوخ' : 'Cancel'}
+                                                {isUrdu ? 'Ù…Ù†Ø³ÙˆØ®' : 'Cancel'}
                                             </Button>
                                         )}
                                         <Button
                                             ref={submitBtnRef}
                                             type="submit"
                                             disabled={!isAddEnabled || processing}
-                                            className={`w-full h-14 rounded-2xl text-base font-bold flex items-center justify-center gap-2 transition-all shadow-sm ${
+                                            className={`w-full h-10 rounded-xl text-xs md:text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-xs ${
                                                 isAddEnabled
-                                                    ? 'bg-[#1e713e] hover:bg-[#165a31] text-white cursor-pointer shadow-md'
+                                                    ? 'bg-[#1e713e] hover:bg-[#165a31] text-white cursor-pointer shadow-xs'
                                                     : 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-200'
                                             }`}
                                         >
                                             <span>
                                                 {editingSale
-                                                    ? (isUrdu ? 'تبدیل کریں' : 'Save Changes')
-                                                    : (isUrdu ? 'محفوظ کریں' : 'Save Sale')}
+                                                    ? (isUrdu ? 'ØªØ¨Ø¯ÛŒÙ„ Ú©Ø±ÛŒÚº' : 'Save Changes')
+                                                    : (isUrdu ? 'Ù…Ø­ÙÙˆØ¸ Ú©Ø±ÛŒÚº' : 'Save Sale')}
                                             </span>
-                                            <Icon name="Check" className="size-5" weight="bold" />
+                                            <Icon name="Check" className="size-4" weight="bold" />
                                         </Button>
                                     </div>
 
                                     {!isAddEnabled && missingFields.length > 0 && (
                                         <p className="text-xs text-center text-gray-400 font-medium">
-                                            {isUrdu ? 'باقی ہے: ' : 'Baqi hai: '}
-                                            <span className="text-gray-600 font-semibold">{missingFields.join(isUrdu ? '، ' : ', ')}</span>
+                                            {isUrdu ? 'Ø¨Ø§Ù‚ÛŒ ÛÛ’: ' : 'Baqi hai: '}
+                                            <span className="text-gray-600 font-semibold">{missingFields.join(isUrdu ? 'ØŒ ' : ', ')}</span>
                                         </p>
                                     )}
                                 </div>
@@ -1127,18 +1118,8 @@ Thank you!`;
                 {/* 4. Controls Bar */}
                 <div className="flex flex-wrap items-center justify-between gap-2 bg-white p-3 rounded-2xl border border-gray-100 shadow-xs">
                     <div className="flex items-center gap-2">
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => window.print()}
-                            className={`h-8 px-2.5 text-xs font-semibold text-green-900 border-green-300 hover:bg-green-50 flex items-center gap-1 ${isUrdu ? 'font-nastaliq' : ''}`}
-                        >
-                            <Icon name="Printer" className="size-3.5 text-green-700" />
-                            <span>{isUrdu ? 'پرنٹ' : 'Print'}</span>
-                        </Button>
                         <span className={`text-xs text-muted-foreground ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? 'کل اندراج:' : 'Records:'}{' '}
+                            {isUrdu ? 'Ú©Ù„ Ø§Ù†Ø¯Ø±Ø§Ø¬:' : 'Records:'}{' '}
                             <strong className="text-green-900 font-mono">{sales.length}</strong>
                         </span>
                     </div>
@@ -1148,11 +1129,11 @@ Thank you!`;
                         <Input
                             value={searchFilter}
                             onChange={e => setSearchFilter(e.target.value)}
-                            placeholder={isUrdu ? "تلاش کریں..." : "Search..."}
+                            placeholder={isUrdu ? "ØªÙ„Ø§Ø´ Ú©Ø±ÛŒÚº..." : "Search..."}
                             className={`h-8 text-xs rounded-xl ${isUrdu ? 'font-nastaliq' : ''}`}
                         />
                         <Button type="submit" size="sm" variant="outline" className="h-8 px-2.5 rounded-xl">
-                            <Icon name="Search" className="size-3.5" />
+                            <Icon name="MagnifyingGlass" className="size-3.5" />
                         </Button>
                     </form>
                 </div>
@@ -1164,23 +1145,23 @@ Thank you!`;
                             <thead className="bg-[#14532d] text-white select-none">
                                 <tr>
                                     <th className={`p-2 text-center w-8 ${isUrdu ? 'font-nastaliq' : ''}`}>#</th>
-                                    <th className={`p-2 text-start w-16 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'طریقہ' : 'Payment'}</th>
-                                    <th className={`p-2 text-start w-14 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'کوڈ' : 'Code'}</th>
-                                    <th className={`p-2 text-start ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'خریدار' : 'Buyer'}</th>
-                                    <th className={`p-2 text-start ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'آئٹم' : 'Item'}</th>
-                                    <th className={`p-2 text-end w-16 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'تعداد' : 'Units'}</th>
-                                    <th className={`p-2 text-end w-20 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'وزن' : 'Weight'}</th>
-                                    <th className={`p-2 text-end w-20 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'ریٹ' : 'Rate'}</th>
-                                    <th className={`p-2 text-end w-20 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'بوری خرچہ' : 'Packing'}</th>
-                                    <th className={`p-2 text-end w-24 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'کل رقم' : 'Total'}</th>
-                                    <th className={`p-2 text-center w-28 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'کارروائی' : 'Actions'}</th>
+                                    <th className={`p-2 text-start w-16 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'Ø·Ø±ÛŒÙ‚Û' : 'Payment'}</th>
+                                    <th className={`p-2 text-start w-14 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'Ú©ÙˆÚˆ' : 'Code'}</th>
+                                    <th className={`p-2 text-start ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'Ø®Ø±ÛŒØ¯Ø§Ø±' : 'Buyer'}</th>
+                                    <th className={`p-2 text-start ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'Ø¢Ø¦Ù¹Ù…' : 'Item'}</th>
+                                    <th className={`p-2 text-end w-16 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'ØªØ¹Ø¯Ø§Ø¯' : 'Units'}</th>
+                                    <th className={`p-2 text-end w-20 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'ÙˆØ²Ù†' : 'Weight'}</th>
+                                    <th className={`p-2 text-end w-20 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'Ø±ÛŒÙ¹' : 'Rate'}</th>
+                                    <th className={`p-2 text-end w-20 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'Ø¨ÙˆØ±ÛŒ Ø®Ø±Ú†Û' : 'Packing'}</th>
+                                    <th className={`p-2 text-end w-24 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'Ú©Ù„ Ø±Ù‚Ù…' : 'Total'}</th>
+                                    <th className={`p-2 text-center w-28 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'Ú©Ø§Ø±Ø±ÙˆØ§Ø¦ÛŒ' : 'Actions'}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {sales.length === 0 ? (
                                     <tr>
                                         <td colSpan={11} className={`p-6 text-center text-muted-foreground text-xs ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                            {isUrdu ? 'آج کا کوئی اندراج نہیں ہے۔' : 'No records found for today.'}
+                                            {isUrdu ? 'Ø¢Ø¬ Ú©Ø§ Ú©ÙˆØ¦ÛŒ Ø§Ù†Ø¯Ø±Ø§Ø¬ Ù†ÛÛŒÚº ÛÛ’Û”' : 'No records found for today.'}
                                         </td>
                                     </tr>
                                 ) : (
@@ -1204,11 +1185,11 @@ Thank you!`;
                                                 <td className="p-2">
                                                     {isNaqdi ? (
                                                         <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-green-100 text-green-900 border border-green-300 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                            {isUrdu ? 'نقد' : 'Cash'}
+                                                            {isUrdu ? 'Ù†Ù‚Ø¯' : 'Cash'}
                                                         </span>
                                                     ) : (
                                                         <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-blue-100 text-blue-900 border border-blue-300 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                            {isUrdu ? 'ادھار' : 'Credit'}
+                                                            {isUrdu ? 'Ø§Ø¯Ú¾Ø§Ø±' : 'Credit'}
                                                         </span>
                                                     )}
                                                 </td>
@@ -1224,18 +1205,18 @@ Thank you!`;
                                                         {isUrdu ? (sale.item?.name_ur || sale.item?.name_en) : (sale.item?.name_en || sale.item?.name_ur)}
                                                     </span>
                                                     <span className="text-[10px] text-gray-500 font-mono ms-1">
-                                                        ({sale.item?.unit || (isUrdu ? 'بوری' : 'Bag')})
+                                                        ({sale.item?.unit || (isUrdu ? 'Ø¨ÙˆØ±ÛŒ' : 'Bag')})
                                                     </span>
                                                 </td>
 
-                                                <td className="p-2 text-end font-mono font-bold text-xs">{sale.nag}</td>
+                                                <td className="p-2 text-end font-mono tabular-nums font-bold text-xs">{sale.nag}</td>
 
-                                                <td className="p-2 text-end font-mono text-xs">
+                                                <td className="p-2 text-end font-mono tabular-nums text-xs">
                                                     {Number(sale.weight) > 0 ? (
                                                         <span>
                                                             <strong>{Number(sale.weight).toFixed(2)}</strong>{' '}
                                                             <span className="text-[10px] text-gray-500">
-                                                                {isUrdu ? (sale.item?.unit?.toLowerCase().includes('kg') ? 'کلو' : 'من') : (sale.item?.unit || 'Kg')}
+                                                                {isUrdu ? (sale.item?.unit?.toLowerCase().includes('kg') ? 'Ú©Ù„Ùˆ' : 'Ù…Ù†') : (sale.item?.unit || 'Kg')}
                                                             </span>
                                                         </span>
                                                     ) : (
@@ -1243,15 +1224,15 @@ Thank you!`;
                                                     )}
                                                 </td>
 
-                                                <td className="p-2 text-end font-mono text-xs">
+                                                <td className="p-2 text-end font-mono tabular-nums text-xs">
                                                     {Number(sale.rate).toLocaleString()}
                                                 </td>
 
-                                                <td className="p-2 text-end font-mono text-xs text-gray-600">
+                                                <td className="p-2 text-end font-mono tabular-nums text-xs text-gray-600">
                                                     {Number(sale.bardana) > 0 ? Number(sale.bardana).toLocaleString() : '-'}
                                                 </td>
 
-                                                <td className="p-2 text-end font-mono font-bold text-green-900 text-xs">
+                                                <td className="p-2 text-end font-mono tabular-nums font-bold text-green-900 text-xs">
                                                     {Number(sale.gross_amount).toLocaleString()}
                                                 </td>
 
@@ -1261,26 +1242,16 @@ Thank you!`;
                                                             type="button"
                                                             onClick={() => openSlip(sale)}
                                                             className={`px-1.5 py-0.5 bg-green-100 hover:bg-green-200 text-green-900 rounded text-[11px] font-semibold flex items-center gap-0.5 cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
-                                                            title={isUrdu ? 'پرچی' : 'Slip'}
+                                                            title={isUrdu ? 'Ù¾Ø±Ú†ÛŒ' : 'Slip'}
                                                         >
-                                                            <span>{isUrdu ? 'پرچی' : 'Slip'}</span>
+                                                            <span>{isUrdu ? 'Ù¾Ø±Ú†ÛŒ' : 'Slip'}</span>
                                                         </button>
-
-                                                        <a
-                                                            href={getWhatsAppUrl(sale)}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="p-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded transition-colors"
-                                                            title={isUrdu ? 'واٹس ایپ' : 'WhatsApp'}
-                                                        >
-                                                            <Icon name="ShareNetwork" className="size-3" />
-                                                        </a>
 
                                                         <button
                                                             type="button"
                                                             onClick={() => startEdit(sale)}
-                                                            className="p-1 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded transition-colors"
-                                                            title={isUrdu ? 'ترمیم' : 'Edit'}
+                                                            className="p-1 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded transition-colors cursor-pointer"
+                                                            title={isUrdu ? 'ØªØ±Ù…ÛŒÙ…' : 'Edit'}
                                                         >
                                                             <Icon name="PencilSimple" className="size-3" />
                                                         </button>
@@ -1288,8 +1259,8 @@ Thank you!`;
                                                         <button
                                                             type="button"
                                                             onClick={() => confirmDelete(sale)}
-                                                            className="p-1 bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
-                                                            title={isUrdu ? 'حذف' : 'Delete'}
+                                                            className="p-1 bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors cursor-pointer"
+                                                            title={isUrdu ? 'Ø­Ø°Ù' : 'Delete'}
                                                         >
                                                             <Icon name="Trash" className="size-3" />
                                                         </button>
@@ -1309,7 +1280,7 @@ Thank you!`;
                 <div className="fixed bottom-0 start-0 end-0 bg-green-950 text-white px-3 py-1.5 shadow-xl border-t border-green-700 z-30 flex flex-wrap items-center justify-between gap-2 text-xs">
                     <div className="flex items-center gap-2">
                         <span className={`text-gray-300 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? 'کل تعداد:' : 'Total Units:'}{' '}
+                            {isUrdu ? 'Ú©Ù„ ØªØ¹Ø¯Ø§Ø¯:' : 'Total Units:'}{' '}
                             <strong className="text-white font-mono text-sm">{summary.total_nag}</strong>
                         </span>
                     </div>
@@ -1317,7 +1288,7 @@ Thank you!`;
                     <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
                         <div className="bg-emerald-800/90 border border-emerald-600 px-2 py-0.5 rounded flex items-center gap-1">
                             <span className={`font-semibold text-emerald-200 text-[11px] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {isUrdu ? 'نقد:' : 'Cash:'}
+                                {isUrdu ? 'Ù†Ù‚Ø¯:' : 'Cash:'}
                             </span>
                             <span className="text-white">{summary.cash_nag}</span>
                             <span className="text-emerald-400">|</span>
@@ -1326,7 +1297,7 @@ Thank you!`;
 
                         <div className="bg-blue-900/90 border border-blue-600 px-2 py-0.5 rounded flex items-center gap-1">
                             <span className={`font-semibold text-blue-200 text-[11px] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {isUrdu ? 'ادھار:' : 'Credit:'}
+                                {isUrdu ? 'Ø§Ø¯Ú¾Ø§Ø±:' : 'Credit:'}
                             </span>
                             <span className="text-white">{summary.credit_nag}</span>
                             <span className="text-blue-400">|</span>
@@ -1335,7 +1306,7 @@ Thank you!`;
 
                         <div className="bg-amber-600 text-white px-2.5 py-0.5 rounded flex items-center gap-1.5 font-bold shadow-xs">
                             <span className={`text-amber-100 text-[11px] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {isUrdu ? 'کل بکری:' : 'Total:'}
+                                {isUrdu ? 'Ú©Ù„ Ø¨Ú©Ø±ÛŒ:' : 'Total:'}
                             </span>
                             <span>Rs. {Number(summary.total_gross).toLocaleString()}</span>
                         </div>
@@ -1348,7 +1319,7 @@ Thank you!`;
                 <DialogContent className="max-w-md p-4 text-xs" dir={isUrdu ? 'rtl' : 'ltr'}>
                     <DialogHeader>
                         <DialogTitle className={`text-sm font-bold text-amber-900 flex items-center gap-1.5 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            <span>⚠️ {isUrdu ? 'کیا یہ اندراج صحیح ہے؟' : 'Is this entry correct?'}</span>
+                            <span>âš ï¸ {isUrdu ? 'Ú©ÛŒØ§ ÛŒÛ Ø§Ù†Ø¯Ø±Ø§Ø¬ ØµØ­ÛŒØ­ ÛÛ’ØŸ' : 'Is this entry correct?'}</span>
                         </DialogTitle>
                     </DialogHeader>
                     <p className={`text-xs text-gray-700 leading-relaxed py-2 ${isUrdu ? 'font-nastaliq' : ''}`}>
@@ -1362,7 +1333,7 @@ Thank you!`;
                             onClick={() => setAnomalyConfirmOpen(false)}
                             className={isUrdu ? 'font-nastaliq text-xs' : 'text-xs'}
                         >
-                            {isUrdu ? 'دوبارہ چیک کریں' : 'Check Again'}
+                            {isUrdu ? 'Ø¯ÙˆØ¨Ø§Ø±Û Ú†ÛŒÚ© Ú©Ø±ÛŒÚº' : 'Check Again'}
                         </Button>
                         <Button
                             type="button"
@@ -1370,7 +1341,7 @@ Thank you!`;
                             onClick={executeSave}
                             className={`bg-green-700 hover:bg-green-800 text-white text-xs ${isUrdu ? 'font-nastaliq' : ''}`}
                         >
-                            {isUrdu ? 'ہاں، بالکل صحیح ہے' : 'Yes, Proceed'}
+                            {isUrdu ? 'ÛØ§ÚºØŒ Ø¨Ø§Ù„Ú©Ù„ ØµØ­ÛŒØ­ ÛÛ’' : 'Yes, Proceed'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -1381,11 +1352,11 @@ Thank you!`;
                 <DialogContent className="max-w-md p-4 text-xs" dir={isUrdu ? 'rtl' : 'ltr'}>
                     <DialogHeader>
                         <DialogTitle className={`text-sm font-bold text-red-900 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? 'حذف کرنے کی تصدیق' : 'Confirm Delete'}
+                            {isUrdu ? 'Ø­Ø°Ù Ú©Ø±Ù†Û’ Ú©ÛŒ ØªØµØ¯ÛŒÙ‚' : 'Confirm Delete'}
                         </DialogTitle>
                     </DialogHeader>
                     <p className={`text-xs text-gray-800 py-2 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                        {isUrdu ? 'کیا آپ واقعی یہ انٹری ہٹانا چاہتے ہیں؟' : 'Are you sure you want to delete this entry?'}
+                        {isUrdu ? 'Ú©ÛŒØ§ Ø¢Ù¾ ÙˆØ§Ù‚Ø¹ÛŒ ÛŒÛ Ø§Ù†Ù¹Ø±ÛŒ ÛÙ¹Ø§Ù†Ø§ Ú†Ø§ÛØªÛ’ ÛÛŒÚºØŸ' : 'Are you sure you want to delete this entry?'}
                     </p>
                     <DialogFooter className="gap-1.5">
                         <Button
@@ -1395,7 +1366,7 @@ Thank you!`;
                             onClick={() => setDeleteModalOpen(false)}
                             className={isUrdu ? 'font-nastaliq text-xs' : 'text-xs'}
                         >
-                            {isUrdu ? 'منسوخ' : 'Cancel'}
+                            {isUrdu ? 'Ù…Ù†Ø³ÙˆØ®' : 'Cancel'}
                         </Button>
                         <Button
                             type="button"
@@ -1403,7 +1374,7 @@ Thank you!`;
                             onClick={executeDelete}
                             className={`bg-red-600 hover:bg-red-700 text-white text-xs ${isUrdu ? 'font-nastaliq' : ''}`}
                         >
-                            {isUrdu ? 'ہاں، حذف کریں' : 'Yes, Delete'}
+                            {isUrdu ? 'ÛØ§ÚºØŒ Ø­Ø°Ù Ú©Ø±ÛŒÚº' : 'Yes, Delete'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -1411,83 +1382,111 @@ Thank you!`;
 
             {/* Thermal Receipt Slip Modal */}
             <Dialog open={slipModalOpen} onOpenChange={setSlipModalOpen}>
-                <DialogContent className="max-w-xs p-3.5 font-mono text-xs" dir={isUrdu ? 'rtl' : 'ltr'}>
+                <DialogContent className="max-w-md p-4 font-sans text-xs bg-white text-black" dir={isUrdu ? 'rtl' : 'ltr'}>
                     {slipSale && (
-                        <div className="space-y-2.5">
-                            <div className="text-center border-b pb-1.5">
-                                <h3 className={`font-bold text-sm text-green-900 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                    {isUrdu ? 'جعفر خان اینڈ برادرز کمپنی' : 'Jaffer Khan & Brother Company'}
-                                </h3>
-                                <p className={`text-[10px] text-gray-600 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                    {isUrdu ? 'سبزی کمیشن ایجنٹ، کراچی' : 'Vegetable Commission Agent, Karachi'}
-                                </p>
-                                <p className="text-[10px] text-gray-500 font-mono">
-                                    {isUrdu ? 'تاریخ:' : 'Date:'} {slipSale.date}
-                                </p>
+                        <div className="space-y-3">
+                            <div id="printable-sale-slip" className="bg-white text-black p-3 rounded-lg border border-gray-200">
+                                {/* Header */}
+                                <div className="text-center border-b border-gray-300 pb-2 mb-2">
+                                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                                        <div className="w-6 h-6 rounded bg-[#166534] text-white flex items-center justify-center font-black text-xs">V</div>
+                                        <h2 className="font-extrabold text-sm tracking-wide text-black uppercase">Vegetable POS</h2>
+                                    </div>
+                                    <p className="text-[10px] text-gray-700 font-medium">Sales Slip · Amroza</p>
+                                </div>
+
+                                {/* Slip Meta */}
+                                <div className="grid grid-cols-2 gap-1 text-[11px] border-b border-gray-200 pb-2 mb-2">
+                                    <div>
+                                        <span className="text-gray-500">{isUrdu ? 'Ù¾Ø±Ú†ÛŒ Ù†Ù…Ø¨Ø±:' : 'Slip #:'} </span>
+                                        <strong className="font-mono text-black">#{slipSale.id}</strong>
+                                    </div>
+                                    <div className="text-end">
+                                        <span className="text-gray-500">{isUrdu ? 'ØªØ§Ø±ÛŒØ®:' : 'Date:'} </span>
+                                        <strong className="font-mono text-black">{slipSale.date}</strong>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-500">{isUrdu ? 'Ø®Ø±ÛŒØ¯Ø§Ø±:' : 'Buyer:'} </span>
+                                        <strong className="text-black">
+                                            {isUrdu ? (slipSale.merchant?.name_ur || slipSale.merchant?.name_en) : (slipSale.merchant?.name_en || saleItemName(slipSale))} (#{slipSale.merchant?.code})
+                                        </strong>
+                                    </div>
+                                    <div className="text-end">
+                                        <span className="text-gray-500">{isUrdu ? 'Ø§Ø¯Ø§Ø¦ÛŒÚ¯ÛŒ:' : 'Payment:'} </span>
+                                        <strong className={slipSale.payment_type === 'naqdi' ? 'text-green-700 font-bold' : 'text-amber-800 font-bold'}>
+                                            {slipSale.payment_type === 'naqdi' ? (isUrdu ? 'Ù†Ù‚Ø¯' : 'CASH') : (isUrdu ? 'Ø§Ø¯Ú¾Ø§Ø±' : 'CREDIT')}
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                {/* Table */}
+                                <table className="w-full text-[11px] mb-2 border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-t border-gray-300 text-gray-700 text-[10px] uppercase font-bold">
+                                            <th className="py-1 text-start">{isUrdu ? 'Ø¬Ù†Ø³' : 'Item'}</th>
+                                            <th className="py-1 text-center">{isUrdu ? 'Ù†Ú¯' : 'Nag'}</th>
+                                            <th className="py-1 text-center">{isUrdu ? 'ÙˆØ²Ù†' : 'Weight'}</th>
+                                            <th className="py-1 text-end">{isUrdu ? 'Ø±ÛŒÙ¹' : 'Rate'}</th>
+                                            <th className="py-1 text-end">{isUrdu ? 'Ø¨Ø§Ø±Ø¯Ø§Ù†Û' : 'Packing'}</th>
+                                            <th className="py-1 text-end">{isUrdu ? 'Ú©Ù„ Ø±Ù‚Ù…' : 'Total'}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        <tr>
+                                            <td className="py-1.5 font-semibold text-black">
+                                                {isUrdu ? (slipSale.item?.name_ur || slipSale.item?.name_en) : saleItemName(slipSale)}
+                                            </td>
+                                            <td className="py-1.5 text-center font-mono font-bold text-black">{slipSale.nag}</td>
+                                            <td className="py-1.5 text-center font-mono text-gray-700">{Number(slipSale.weight) > 0 ? slipSale.weight : '-'}</td>
+                                            <td className="py-1.5 text-end font-mono text-gray-800">Rs. {Number(slipSale.rate).toLocaleString()}</td>
+                                            <td className="py-1.5 text-end font-mono text-gray-600">{Number(slipSale.bardana) > 0 ? `Rs. ${Number(slipSale.bardana).toLocaleString()}` : '-'}</td>
+                                            <td className="py-1.5 text-end font-mono font-bold text-black">Rs. {Number(slipSale.gross_amount).toLocaleString()}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                {/* Total */}
+                                <div className="flex justify-between items-center text-xs font-bold border-t border-b border-gray-300 py-1.5 mb-2">
+                                    <span>{isUrdu ? 'ØµØ§ÙÛŒ Ø±Ù‚Ù… (GRAND TOTAL):' : 'GRAND TOTAL:'}</span>
+                                    <span className="font-mono text-sm font-extrabold text-[#14532d]">Rs. {Number(slipSale.gross_amount).toLocaleString()}</span>
+                                </div>
+
+                                {/* Footer & Signatures */}
+                                <div className="text-center pt-1 space-y-2">
+                                    <p className="text-[10px] text-gray-600 font-medium">
+                                        {isUrdu ? 'Ø¢Ù¾ Ú©ÛŒ ØªØ´Ø±ÛŒÙ Ø¢ÙˆØ±ÛŒ Ú©Ø§ Ø´Ú©Ø±ÛŒÛ - Thank You!' : 'Thank you for your business! - Ø´Ú©Ø±ÛŒÛ'}
+                                    </p>
+                                    <div className="text-center pt-2 text-[10px] text-gray-400 font-mono border-t border-gray-200 mt-2">
+                                        Printed on: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className={`space-y-1 border-b pb-2 text-start text-xs ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">{isUrdu ? 'خریدار:' : 'Buyer:'}</span>
-                                    <span className="font-bold">
-                                        {isUrdu ? (slipSale.merchant?.name_ur || slipSale.merchant?.name_en) : (slipSale.merchant?.name_en || saleItemName(slipSale))} (#{slipSale.merchant?.code})
-                                    </span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">{isUrdu ? 'ادائیگی:' : 'Payment:'}</span>
-                                    <span className="font-bold">
-                                        {slipSale.payment_type === 'naqdi' ? (isUrdu ? 'نقد' : 'Cash') : (isUrdu ? 'ادھار' : 'Credit')}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">{isUrdu ? 'آئٹم:' : 'Item:'}</span>
-                                    <span className="font-bold">
-                                        {isUrdu ? (slipSale.item?.name_ur || slipSale.item?.name_en) : (saleItemName(slipSale))}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">{isUrdu ? 'تعداد:' : 'Units:'}</span>
-                                    <span className="font-bold font-mono">{slipSale.nag}</span>
-                                </div>
-                                {Number(slipSale.weight) > 0 && (
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">{isUrdu ? 'وزن:' : 'Weight:'}</span>
-                                        <span className="font-bold font-mono">{slipSale.weight}</span>
-                                    </div>
-                                )}
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">{isUrdu ? 'ریٹ:' : 'Rate:'}</span>
-                                    <span className="font-bold font-mono">Rs. {Number(slipSale.rate).toLocaleString()}</span>
-                                </div>
-                                {Number(slipSale.bardana) > 0 && (
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">{isUrdu ? 'بوری خرچہ:' : 'Packing:'}</span>
-                                        <span className="font-bold font-mono">Rs. {Number(slipSale.bardana).toLocaleString()}</span>
-                                    </div>
-                                )}
-                                <div className="flex justify-between font-bold text-green-950 pt-1 border-t text-xs">
-                                    <span>{isUrdu ? 'کل رقم:' : 'Total:'}</span>
-                                    <span className="font-mono">Rs. {Number(slipSale.gross_amount).toLocaleString()}</span>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-1.5 pt-1">
+                            {/* Buttons */}
+                            <div className="flex items-center gap-2 pt-1 print:hidden">
                                 <Button
                                     type="button"
                                     size="sm"
-                                    onClick={() => window.print()}
-                                    className={`flex-1 h-8 text-xs bg-green-700 hover:bg-green-800 text-white ${isUrdu ? 'font-nastaliq' : ''}`}
+                                    onClick={() => {
+                                        document.body.classList.add('printing-slip');
+                                        window.print();
+                                        setTimeout(() => {
+                                            document.body.classList.remove('printing-slip');
+                                        }, 1500);
+                                    }}
+                                    className={`flex-1 h-9 text-xs bg-[#14532d] hover:bg-[#0e3b20] text-white font-semibold cursor-pointer flex items-center justify-center gap-1.5 ${isUrdu ? 'font-nastaliq' : ''}`}
                                 >
-                                    {isUrdu ? 'پرنٹ کریں' : 'Print Slip'}
+                                    <Icon name="Printer" className="size-4" />
+                                    <span>{isUrdu ? 'Ù¾Ø±Ú†ÛŒ Ù¾Ø±Ù†Ù¹ Ú©Ø±ÛŒÚº' : 'Print Slip'}</span>
                                 </Button>
                                 <Button
                                     type="button"
                                     size="sm"
                                     variant="outline"
                                     onClick={() => setSlipModalOpen(false)}
-                                    className={`h-8 text-xs ${isUrdu ? 'font-nastaliq' : ''}`}
+                                    className={`h-9 text-xs px-4 cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
                                 >
-                                    {isUrdu ? 'بند کریں' : 'Close'}
+                                    {isUrdu ? 'Ø¨Ù†Ø¯ Ú©Ø±ÛŒÚº' : 'Close'}
                                 </Button>
                             </div>
                         </div>
@@ -1501,3 +1500,4 @@ Thank you!`;
         return sale.item?.name_en || sale.item?.name_ur || 'Item';
     }
 }
+

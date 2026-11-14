@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JKC POS - Starting...</title>
+    <title>Vegetable POS - Starting...</title>
     <style>
         * {
             margin: 0;
@@ -28,7 +28,6 @@
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
         }
-        /* Background decorative grid pattern */
         .bg-pattern {
             position: absolute;
             inset: 0;
@@ -67,20 +66,12 @@
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
         .title {
-            font-size: 20px;
+            font-size: 24px;
             font-weight: 800;
             letter-spacing: -0.02em;
             color: #ffffff;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
             text-align: center;
-        }
-        .urdu-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: #a7f3d0;
-            margin-bottom: 8px;
-            text-align: center;
-            direction: rtl;
         }
         .subtitle {
             font-size: 11px;
@@ -134,16 +125,13 @@
 
     <div class="logo-wrap">
         <div class="logo-glow"></div>
-        <svg class="logo-svg" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="48" height="48" rx="10" fill="#059669" />
-            <path d="M12 24C12 16 22 12 34 13C34 25 28 35 18 35C14.6863 35 12 30.0751 12 24Z" fill="white" />
-            <path d="M20 31C24 27 28 21 31 16" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" />
-            <text x="24" y="44" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold" fontFamily="sans-serif">JKC</text>
+        <svg class="logo-svg" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="128" height="128" rx="28" fill="#166534" />
+            <path d="M30 32 L53 96 H75 L98 32 H80 L64 77 L48 32 Z" fill="#ffffff" />
         </svg>
     </div>
 
-    <div class="title">Jaffer Khan & Brother Company</div>
-    <div class="urdu-title">جعفر خان اینڈ برادر کمپنی (سبزی کمیشن ایجنٹ)</div>
+    <div class="title">Vegetable POS</div>
     <div class="subtitle">Offline Desktop POS • 2026</div>
 
     <div class="progress-track">
@@ -157,9 +145,9 @@
     <script>
         const statusMsg = document.getElementById('statusMsg');
         const steps = [
-            { time: 400, text: "Verifying SQLite integrity..." },
+            { time: 400, text: "Verifying database integrity..." },
             { time: 1000, text: "Initializing local services..." },
-            { time: 1800, text: "Loading Mandi POS Interface..." },
+            { time: 1800, text: "Loading Vegetable POS Interface..." },
             { time: 2300, text: "Ready!" }
         ];
         steps.forEach(s => {

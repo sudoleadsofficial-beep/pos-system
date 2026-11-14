@@ -1,47 +1,36 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        {{-- Inline script to detect system dark mode preference and apply it immediately --}}
+        {{-- Locale detection --}}
         <script>
             (function() {
-                const appearance = '{{ $appearance ?? "system" }}';
-
-                if (appearance === 'system') {
-                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-                    if (prefersDark) {
-                        document.documentElement.classList.add('dark');
-                    }
-                }
-
-                const savedLocale = localStorage.getItem('jkc_locale') || '{{ session("locale", "en") }}';
+                const savedLocale = localStorage.getItem('veg_locale') || localStorage.getItem('jkc_locale') || '{{ session("locale", "en") }}';
                 document.documentElement.lang = savedLocale;
                 document.documentElement.dir = savedLocale === 'ur' ? 'rtl' : 'ltr';
+                document.documentElement.classList.remove('dark');
             })();
         </script>
 
-        {{-- Inline style to set the HTML background color based on our theme in app.css --}}
+        {{-- Inline style: Force light background --}}
         <style>
             html {
-                background-color: oklch(100% 0 0);
-            }
-
-            html.dark {
-                background-color: oklch(14.1% .005 285.823);
+                background-color: #ffffff;
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'JKC POS') }}</title>
-        <link rel="icon" type="image/x-icon" href="/favicon.ico">
+        <title inertia>{{ config('app.name', 'Vegetable POS') }}</title>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+        <link rel="alternate icon" type="image/x-icon" href="/favicon.ico">
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 
         <!-- Offline & Fallback Fonts -->
         <link rel="stylesheet" href="/fonts/fonts.css">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+        <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Naskh+Arabic:wght@400;600&family=Geist+Mono:wght@100..900&display=swap" rel="stylesheet">
 
         @routes
         @viteReactRefresh
