@@ -1,0 +1,143 @@
+name: Build Desktop POS (macOS & Windows)
+
+on:
+  push:
+    branches:
+      - main
+      - desktop-pos-update
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    name: Build macOS DMG & ZIP
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP for build
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, sqlite3, curl, fileinfo, pdo, pdo_sqlite, bcmath
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+
+      - name: Install NPM dependencies
+        run: npm install
+
+      - name: Setup Environment & Database
+        run: |
+          if [ ! -f .env ]; then
+            cp .env.example .env
+          fi
+          php artisan key:generate --force
+          sed -i '' 's/DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+          mkdir -p database
+          touch database/database.sqlite
+          php artisan migrate --force --seed
+
+      - name: Bundle Portable Standalone PHP for macOS
+        run: |
+          echo "Fetching standalone portable PHP binaries for macOS..."
+          mkdir -p /tmp/php-dl
+          curl -fsSL -o /tmp/php-dl/php-arm64.zip "https://raw.githubusercontent.com/NativePHP/php-bin/main/bin/mac/arm64/php-8.3.zip"
+          curl -fsSL -o /tmp/php-dl/php-x64.zip "https://raw.githubusercontent.com/NativePHP/php-bin/main/bin/mac/x64/php-8.3.zip"
+          
+          unzip -q /tmp/php-dl/php-arm64.zip -d /tmp/php-dl/arm64
+          unzip -q /tmp/php-dl/php-x64.zip -d /tmp/php-dl/x64
+          
+          mkdir -p php-mac/bin
+          # Combine into Universal Mach-O binary (runs on both Apple Silicon M1/M2/M3/M4 & Intel)
+          lipo -create /tmp/php-dl/arm64/php /tmp/php-dl/x64/php -output php-mac/bin/php
+          chmod +x php-mac/bin/php
+          
+          echo "Universal binary verified:"
+          file php-mac/bin/php
+          ./php-mac/bin/php -v
+
+      - name: Build Web Assets
+        run: npm run build
+
+      - name: Build macOS Application (DMG & ZIP)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx electron-builder --mac dmg zip
+
+      - name: Upload macOS Installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vegetable-POS-macOS
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/*.blockmap
+          retention-days: 30
+
+  build-windows:
+    name: Build Windows EXE Installer
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP for build
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, sqlite3, curl, fileinfo, pdo, pdo_sqlite, bcmath
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+
+      - name: Install NPM dependencies
+        run: npm install
+
+      - name: Setup Environment & Database
+        shell: pwsh
+        run: |
+          if (-not (Test-Path .env)) {
+            Copy-Item .env.example .env
+          }
+          php artisan key:generate --force
+          (Get-Content .env) -replace '^DB_CONNECTION=.*', 'DB_CONNECTION=sqlite' | Set-Content .env
+          if (-not (Test-Path database\database.sqlite)) {
+            New-Item -ItemType File -Path database\database.sqlite -Force
+          }
+          php artisan migrate --force --seed
+
+      - name: Build Web Assets
+        run: npm run build
+
+      - name: Build Windows Application (EXE)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx electron-builder --win
+
+      - name: Upload Windows Installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vegetable-POS-Windows
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+          retention-days: 30

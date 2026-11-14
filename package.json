@@ -9,6 +9,7 @@
     "scripts": {
         "desktop": "electron ./electron/main.cjs",
         "build:exe": "vite build && electron-builder --win",
+        "build:mac": "vite build && electron-builder --mac",
         "build": "vite build",
         "build:ssr": "vite build && vite build --ssr",
         "dev": "vite",
@@ -107,18 +108,18 @@
             ".env",
             "!node_modules/**/*"
         ],
-        "extraResources": [
-            {
-                "from": "php-win",
-                "to": "php-win",
-                "filter": [
-                    "**/*"
-                ]
-            }
-        ],
         "win": {
             "target": "nsis",
-            "icon": "public/icon-256.ico"
+            "icon": "public/icon-256.ico",
+            "extraResources": [
+                {
+                    "from": "php-win",
+                    "to": "php-win",
+                    "filter": [
+                        "**/*"
+                    ]
+                }
+            ]
         },
         "nsis": {
             "oneClick": false,
@@ -127,6 +128,46 @@
             "createStartMenuShortcut": true,
             "shortcutName": "Vegetable POS",
             "runAfterFinish": true
+        },
+        "mac": {
+            "target": [
+                {
+                    "target": "dmg",
+                    "arch": ["universal", "x64", "arm64"]
+                },
+                {
+                    "target": "zip",
+                    "arch": ["universal", "x64", "arm64"]
+                }
+            ],
+            "category": "public.app-category.business",
+            "icon": "public/icon-512.png",
+            "hardenedRuntime": false,
+            "gatekeeperAssess": false,
+            "extraResources": [
+                {
+                    "from": "php-mac",
+                    "to": "php-mac",
+                    "filter": [
+                        "**/*"
+                    ]
+                }
+            ]
+        },
+        "dmg": {
+            "title": "Vegetable POS",
+            "contents": [
+                {
+                    "x": 130,
+                    "y": 220
+                },
+                {
+                    "x": 410,
+                    "y": 220,
+                    "type": "link",
+                    "path": "/Applications"
+                }
+            ]
         }
     }
 }
