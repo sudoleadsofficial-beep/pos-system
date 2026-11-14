@@ -34,17 +34,6 @@ jobs:
       - name: Install NPM dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Setup Environment & Database
-        run: |
-          if [ ! -f .env ]; then
-            cp .env.example .env
-          fi
-          php artisan key:generate --force
-          sed -i '' 's/DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
-          mkdir -p database
-          touch database/database.sqlite
-          php artisan migrate --force --seed
-
       - name: Bundle Portable Standalone PHP for macOS
         run: |
           echo "Fetching standalone portable PHP binaries for macOS..."
@@ -109,19 +98,6 @@ jobs:
 
       - name: Install NPM dependencies
         run: npm install --legacy-peer-deps
-
-      - name: Setup Environment & Database
-        shell: pwsh
-        run: |
-          if (-not (Test-Path .env)) {
-            Copy-Item .env.example .env
-          }
-          php artisan key:generate --force
-          (Get-Content .env) -replace '^DB_CONNECTION=.*', 'DB_CONNECTION=sqlite' | Set-Content .env
-          if (-not (Test-Path database\database.sqlite)) {
-            New-Item -ItemType File -Path database\database.sqlite -Force
-          }
-          php artisan migrate --force --seed
 
       - name: Build Web Assets
         run: npm run build
