@@ -26,14 +26,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
 
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader --no-interaction
 
       - name: Install NPM dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Setup Environment & Database
         run: |
@@ -59,7 +58,8 @@ jobs:
           mkdir -p php-mac/bin
           # Combine into Universal Mach-O binary (runs on both Apple Silicon M1/M2/M3/M4 & Intel)
           lipo -create /tmp/php-dl/arm64/php /tmp/php-dl/x64/php -output php-mac/bin/php
-          chmod +x php-mac/bin/php
+          cp php-mac/bin/php php-mac/php
+          chmod -R 755 php-mac
           
           echo "Universal binary verified:"
           file php-mac/bin/php
@@ -102,14 +102,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
 
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader --no-interaction
 
       - name: Install NPM dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Setup Environment & Database
         shell: pwsh
