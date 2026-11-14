@@ -319,19 +319,14 @@ function createMainWindow() {
     const startTime = Date.now();
 
     const transitionToMain = () => {
-        const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, 2400 - elapsed); // Minimum 2.4s splash display
-
-        setTimeout(() => {
-            if (splashWindow && !splashWindow.isDestroyed()) {
-                splashWindow.close();
-            }
-            if (mainWindow && !mainWindow.isDestroyed()) {
-                mainWindow.show();
-                mainWindow.maximize();
-                mainWindow.focus();
-            }
-        }, remaining);
+        if (splashWindow && !splashWindow.isDestroyed()) {
+            splashWindow.close();
+        }
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.show();
+            mainWindow.maximize();
+            mainWindow.focus();
+        }
     };
 
     mainWindow.webContents.on('did-finish-load', () => {
@@ -343,6 +338,14 @@ function createMainWindow() {
             console.log('[Vegetable POS Desktop] Main page non-HTTP load:', currentUrl);
         }
     });
+
+    // Fallback: If page didn't fire did-finish-load within 5s, force show window
+    setTimeout(() => {
+        if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
+            console.log('[Vegetable POS Desktop] Force-showing window after timeout fallback');
+            transitionToMain();
+        }
+    }, 5000);
 
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
         console.log('[Vegetable POS Desktop] Main load retry...', errorCode, errorDescription);

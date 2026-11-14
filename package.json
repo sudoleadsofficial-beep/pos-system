@@ -130,7 +130,8 @@
             "createDesktopShortcut": true,
             "createStartMenuShortcut": true,
             "shortcutName": "Vegetable POS",
-            "runAfterFinish": true
+            "runAfterFinish": true,
+            "differentialPackage": false
         },
         "mac": {
             "target": [
